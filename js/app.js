@@ -10,16 +10,85 @@ if (urlToken) {
 
 let allGuilds = [];
 
-// Кнопка входа
-document.getElementById('discord-login')?.addEventListener('click', () => {
-  window.location.href = `${API_URL}/api/auth/login`;
-});
-
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id)?.classList.add('active');
 }
 
+// Запуск при загрузке
+window.addEventListener('DOMContentLoaded', () => {
+  // 1. Кнопка входа
+  const loginBtn = document.getElementById('discord-login');
+  if (loginBtn) {
+    loginBtn.addEventListener('click', () => {
+      window.location.href = `${API_URL}/api/auth/login`;
+    });
+  }
+
+  // 2. Переход на экран Учёта
+  document.querySelectorAll('.module-card').forEach(card => {
+    const title = card.querySelector('h3').textContent;
+    if (title === 'Учёт') {
+      card.querySelector('button').onclick = () => {
+        showScreen('screen-accounting');
+      };
+    }
+  });
+
+  // 3. Кнопки "Назад"
+  document.getElementById('back-to-servers')?.addEventListener('click', () => showScreen('screen-servers'));
+  document.getElementById('back-to-settings')?.addEventListener('click', () => showScreen('screen-settings'));
+
+  // 4. Модальное окно учёта
+  const modal = document.getElementById('modal-accounting');
+  const btnOpenModal = document.getElementById('open-create-modal');
+  const btnCloseModal = document.getElementById('close-modal');
+
+  btnOpenModal?.addEventListener('click', () => {
+    modal.classList.add('active');
+    loadDiscordData(); // Загружаем каналы и роли
+  });
+
+  btnCloseModal?.addEventListener('click', () => modal.classList.remove('active'));
+  modal?.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
+
+  // 5. Добавление объектов в форму
+  const addObjBtn = document.getElementById('add-object-btn');
+  const objectsList = document.getElementById('objects-list');
+
+  addObjBtn?.addEventListener('click', () => {
+    if (objectsList.classList.contains('empty-state')) {
+      objectsList.classList.remove('empty-state');
+      objectsList.innerHTML = '';
+    }
+
+    const objDiv = document.createElement('div');
+    objDiv.className = 'object-item';
+    objDiv.innerHTML = `
+      <input type="text" class="form-input obj-name" placeholder="Название объекта (напр. Автомат)">
+      <input type="text" class="form-input obj-desc" placeholder="Описание (необязательно)">
+      <button class="btn-remove-obj" type="button">✕</button>
+    `;
+
+    objDiv.querySelector('.btn-remove-obj').onclick = () => {
+      objDiv.remove();
+      if (objectsList.children.length === 0) {
+        objectsList.classList.add('empty-state');
+        objectsList.innerHTML = '<p>Нет добавленных объектов</p>';
+      }
+    };
+    objectsList.appendChild(objDiv);
+  });
+
+  // 6. Проверяем, авторизован ли пользователь
+  if (localStorage.getItem('discord_token')) {
+    loadGuilds();
+  } else {
+    showScreen('screen-login');
+  }
+});
+
+// Загрузка серверов
 async function loadGuilds() {
   const token = localStorage.getItem('discord_token');
   if (!token) { showScreen('screen-login'); return; }
@@ -45,8 +114,10 @@ async function loadGuilds() {
   }
 }
 
+// Отрисовка серверов
 async function renderGuilds(guilds) {
   const list = document.getElementById('servers-list');
+  if(!list) return;
   list.innerHTML = '';
 
   if (guilds.length === 0) {
@@ -90,12 +161,8 @@ async function renderGuilds(guilds) {
           btn.disabled = false;
           btn.className = 'btn-card btn-blue';
           btn.onclick = () => {
-            // ✅ ДОБАВЛЕНА ЛОГИКА ВОЗВРАТА НА САЙТ
             const redirectUri = encodeURIComponent(`${API_URL}/api/auth/invite-callback`);
-            
-            // Твой Client ID
             const inviteUrl = `https://discord.com/oauth2/authorize?client_id=1502787223249223740&scope=bot%20applications.commands&permissions=8&guild_id=${guild.id}&redirect_uri=${redirectUri}&response_type=code`;
-            
             window.open(inviteUrl, '_blank');
           };
         }
@@ -112,68 +179,12 @@ async function renderGuilds(guilds) {
   }
 }
 
-// Кнопка "Назад"
-document.getElementById('back-to-servers')?.addEventListener('click', () => {
-  showScreen('screen-servers');
-});
-
-// Запуск
-window.onload = () => {
-  if (localStorage.getItem('discord_token')) {
-    loadGuilds();
-  } else {
-    showScreen('screen-login');
-  }
-};
-
-// Переход на экран Учёта при нажатии на карточку
-document.querySelectorAll('.module-card').forEach(card => {
-  const title = card.querySelector('h3').textContent;
-  if (title === 'Учёт') {
-    card.querySelector('button').onclick = () => {
-      showScreen('screen-accounting');
-    };
-  }
-});
-
-// Кнопка "Назад" с экрана учёта
-document.getElementById('back-to-settings')?.addEventListener('click', () => {
-  showScreen('screen-settings');
-});
-
-// === ЛОГИКА МОДАЛЬНОГО ОКНА ===
-const modal = document.getElementById('modal-accounting');
-const btnOpenModal = document.getElementById('open-create-modal');
-const btnCloseModal = document.getElementById('close-modal');
-
-// Открыть окно
-btnOpenModal?.addEventListener('click', () => {
-  modal.classList.add('active');
-});
-
-// Закрыть окно
-btnCloseModal?.addEventListener('click', () => {
-  modal.classList.remove('active');
-});
-
-// Закрыть при клике на темный фон
-modal?.addEventListener('click', (e) => {
-  if (e.target === modal) {
-    modal.classList.remove('active');
-  }
-});
-
-// === ЛОГИКА МОДАЛЬНОГО ОКНА УЧЁТА ===
-const modal = document.getElementById('modal-accounting');
-const btnOpenModal = document.getElementById('open-create-modal');
-const btnCloseModal = document.getElementById('close-modal');
-
+// Загрузка каналов и ролей для модального окна
 async function loadDiscordData() {
   const guildId = localStorage.getItem('currentGuildId');
   if (!guildId) return;
 
   try {
-    // Загружаем каналы
     const chRes = await fetch(`${API_URL}/api/guild-channels?guild_id=${guildId}`);
     const channels = await chRes.json();
     const chSelect = document.getElementById('channel-public');
@@ -188,13 +199,11 @@ async function loadDiscordData() {
       });
     }
 
-    // Загружаем роли
     const roleRes = await fetch(`${API_URL}/api/guild-roles?guild_id=${guildId}`);
     const roles = await roleRes.json();
     const rolesSelect = document.getElementById('roles-moderator');
     
     if (rolesSelect) {
-       // Для простоты сделаем мультиселект
        rolesSelect.innerHTML = '<option value="">Выберите роли...</option>';
        roles.forEach(r => {
          rolesSelect.innerHTML += `<option value="${r.id}">${r.name}</option>`;
@@ -204,12 +213,3 @@ async function loadDiscordData() {
     console.error('Ошибка загрузки данных Discord:', e);
   }
 }
-
-btnOpenModal?.addEventListener('click', () => {
-  modal.classList.add('active');
-  loadDiscordData(); // Загружаем каналы и роли при открытии
-});
-
-btnCloseModal?.addEventListener('click', () => {
-  modal.classList.remove('active');
-});
