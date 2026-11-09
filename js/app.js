@@ -14,6 +14,7 @@ let selectedPubChannel = null;
 let selectedPubChannelName = '';
 let selectedLogChannel = null;
 let selectedLogChannelName = '';
+let editingId = null; // 🔥 ГЛОБАЛЬНАЯ ПЕРЕМЕННАЯ ДЛЯ ID ПРИ РЕДАКТИРОВАНИИ
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -62,6 +63,7 @@ window.addEventListener('DOMContentLoaded', () => {
     selectedRoles = [];
     selectedPubChannel = null;
     selectedLogChannel = null;
+    editingId = null; // 🔥 СБРАСЫВАЕМ ID, ЧТОБЫ ЗНАТЬ, ЧТО ЭТО СОЗДАНИЕ
 
     modalTitle.textContent = 'Новый учёт';
     modal.classList.add('active');
@@ -104,7 +106,11 @@ window.addEventListener('DOMContentLoaded', () => {
   const btnPublish = document.getElementById('btn-publish');
 
   btnCancel?.addEventListener('click', () => modal.classList.remove('active'));
-  btnSave?.addEventListener('click', () => modal.classList.remove('active'));
+  
+  btnSave?.addEventListener('click', () => {
+    showToast("Черновик сохранён (пока не реализовано)", "success");
+    modal.classList.remove('active');
+  });
 
   // Кнопка Опубликовать - отправляет данные
   btnPublish?.addEventListener('click', async () => {
@@ -133,30 +139,33 @@ window.addEventListener('DOMContentLoaded', () => {
           });
       });
 
-      // 1. Сохраняем в БД
-      const saveResponse = await fetch(`${API_URL}/api/accounting`, {
-        method: 'POST',
+      // 🔥 ВЫБИРАЕМ МЕТОД: POST (создать) или PUT (обновить)
+      const method = editingId ? 'PUT' : 'POST';
+      const url = editingId ? `${API_URL}/api/accounting/${editingId}` : `${API_URL}/api/accounting`;
+
+      const saveResponse = await fetch(url, {
+        method: method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           guildId: guildId,
           name: name,
           channelId: selectedPubChannel,
           channelName: selectedPubChannelName,
-          channelLogsId: selectedLogChannel, // 👈 ДОБАВИЛИ ПЕРЕДАЧУ ID ЛОГОВ
+          channelLogsId: selectedLogChannel,
           items: items
         })
       });
 
       if (!saveResponse.ok) throw new Error('Ошибка сохранения в БД');
 
-      // 2. Отправляем боту (вместе с ID канала логов)
+      // Отправляем боту
       const botResponse = await fetch(`${API_URL}/api/send-accounting`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           guildId: guildId,
           channelId: selectedPubChannel,
-          channelLogsId: selectedLogChannel, // 👈 ПЕРЕДАЕМ БОТУ
+          channelLogsId: selectedLogChannel,
           title: name,
           name: name,
           objects: items
@@ -166,11 +175,13 @@ window.addEventListener('DOMContentLoaded', () => {
       const result = await botResponse.json();
       if (!result.success) throw new Error(result.error || 'Бот не отвечает');
 
-      // 3. Перезагружаем таблицу
+      // Перезагружаем таблицу
       loadAccountingData();
       
       modal.classList.remove('active');
-      showToast("Учёт успешно создан!", "success");
+      showToast(editingId ? "Учёт обновлен!" : "Учёт создан!", "success");
+      editingId = null; // Сбрасываем после сохранения
+      
     } catch (error) {
       showToast("Ошибка при публикации: " + error.message, "error");
     } finally {
@@ -268,7 +279,7 @@ function addAccountingRow(id, name, channelId, channelName, items = []) {
     menu.classList.toggle('active');
   };
 
-  // 🔥 УДАЛЕНИЕ ИЗ БАЗЫ ДАННЫХ
+  // УДАЛЕНИЕ
   row.querySelector('.delete-btn').onclick = async () => {
     if (!confirm('Вы уверены, что хотите удалить этот учёт?')) return;
 
@@ -308,7 +319,7 @@ async function openEditModal(id) {
     if (!response.ok) throw new Error('Не удалось загрузить данные');
     const data = await response.json();
 
-    // Открываем окно
+    editingId = id; // 🔥 ЗАПОМИНАЕМ, ЧТО РЕДАКТИРУЕМ
     document.getElementById('modal-accounting').classList.add('active');
     document.getElementById('modal-title').textContent = 'Редактирование учёта';
 
@@ -320,7 +331,7 @@ async function openEditModal(id) {
     selectedPubChannelName = data.channel_name;
     document.getElementById('selected-pub-channel').textContent = '# ' + data.channel_name;
 
-    // Устанавливаем канал логов (если он был сохранен)
+    // Устанавливаем канал логов
     if (data.channel_logs_id) {
       selectedLogChannel = data.channel_logs_id;
       document.getElementById('selected-log-channel').textContent = '# ' + (data.channel_logs_id ? 'Канал логов' : '');
