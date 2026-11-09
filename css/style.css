@@ -214,7 +214,7 @@ body::after { background: #eb459e; bottom: -100px; right: -100px; animation-dela
 }
 .btn-plus:hover { background: #5865f2; color: #fff; }
 
-/* Выпадающие списки */
+/* Выпадающие списки (компактные) */
 .dropdown-content {
   position: absolute;
   background: #1e222d;
@@ -222,30 +222,17 @@ body::after { background: #eb459e; bottom: -100px; right: -100px; animation-dela
   border-radius: 8px;
   width: 100%;
   max-height: 200px; /* Ограничиваем высоту */
-  overflow-y: auto;
+  overflow-y: auto; /* Добавляем скролл, если не влезает */
   z-index: 100;
   margin-top: 4px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  padding-bottom: 10px; /* Место для кнопки */
+  padding-bottom: 10px; /* Место для кнопки "Готово" */
 }
-
-/* Стили для элементов списка */
-.dropdown-item {
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.dropdown-item:hover { background: rgba(255,255,255,0.05); }
-.dropdown-item input { cursor: pointer; }
-
-/* Кнопка "Добавить" внутри списка */
+/* Кнопка "Готово" внутри списка */
 .dropdown-submit-btn {
   display: block;
   width: calc(100% - 32px);
-  margin: 10px 16px 0;
+  margin: 10px 16px 10px;
   padding: 8px;
   background: #5865f2;
   color: #fff;
