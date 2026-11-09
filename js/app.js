@@ -10,6 +10,7 @@ if (urlToken) {
 
 let allGuilds = [];
 
+// Кнопка входа
 document.getElementById('discord-login')?.addEventListener('click', () => {
   window.location.href = `${API_URL}/api/auth/login`;
 });
@@ -36,17 +37,10 @@ async function loadGuilds() {
 
     allGuilds = await response.json();
     renderGuilds(allGuilds);
+    showScreen('screen-servers');
     
-    // Если мы были в настройках, возвращаем туда
-    const savedId = localStorage.getItem('currentGuildId');
-    if (savedId) {
-      const guild = allGuilds.find(g => g.id === savedId);
-      if (guild) openSettings(guild.id, guild.name, false);
-      else showScreen('screen-servers');
-    } else {
-      showScreen('screen-servers');
-    }
   } catch (error) {
+    console.error('Ошибка:', error);
     showScreen('screen-login');
   }
 }
@@ -54,6 +48,7 @@ async function loadGuilds() {
 function renderGuilds(guilds) {
   const list = document.getElementById('servers-list');
   list.innerHTML = '';
+
   if (guilds.length === 0) {
     list.innerHTML = `<p style="text-align:center; width:100%; color:#ed4245;">Нет серверов с правами администратора.</p>`;
     return;
@@ -63,7 +58,9 @@ function renderGuilds(guilds) {
     const card = document.createElement('div');
     card.className = 'server-card';
     const icon = guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png` : `https://cdn.discordapp.com/embed/avatars/0.png`;
-    const isAdmin = (BigInt(guild.permissions) & 8n) === 8n || (BigInt(guild.permissions) & 32n) === 32n;
+    
+    // Проверяем права
+    const isAdmin = (BigInt(guild.permissions || 0) & 8n) === 8n || (BigInt(guild.permissions || 0) & 32n) === 32n;
 
     card.innerHTML = `
       <div class="card-icon-wrap"><img src="${icon}"></div>
@@ -72,41 +69,28 @@ function renderGuilds(guilds) {
     `;
     
     card.querySelector('button').onclick = () => {
-      if (isAdmin) openSettings(guild.id, guild.name, true);
+      if (isAdmin) {
+        // Просто и надежно: сохраняем ID и имя, переключаем экран
+        localStorage.setItem('currentGuildId', guild.id);
+        localStorage.setItem('currentGuildName', guild.name);
+        document.getElementById('current-server-name').textContent = guild.name;
+        showScreen('screen-settings');
+      }
     };
     list.appendChild(card);
   });
 }
 
-function openSettings(guildId, guildName, changeScreen = true) {
-  localStorage.setItem('currentGuildId', guildId);
-  localStorage.setItem('currentGuildName', guildName);
-  document.getElementById('current-server-name').textContent = guildName;
-  
-  const select = document.getElementById('server-select');
-  select.innerHTML = '';
-  allGuilds.forEach(g => {
-    const opt = document.createElement('option');
-    opt.value = g.id;
-    opt.textContent = g.name;
-    if (g.id === guildId) opt.selected = true;
-    select.appendChild(opt);
-  });
-
-  if (changeScreen) showScreen('screen-settings');
-}
-
+// Кнопка "Назад"
 document.getElementById('back-to-servers')?.addEventListener('click', () => {
-  localStorage.removeItem('currentGuildId');
   showScreen('screen-servers');
 });
 
-document.getElementById('server-select')?.addEventListener('change', (e) => {
-  const guild = allGuilds.find(g => g.id === e.target.value);
-  if (guild) openSettings(guild.id, guild.name, false);
-});
-
+// Запуск
 window.onload = () => {
-  if (localStorage.getItem('discord_token')) loadGuilds();
-  else showScreen('screen-login');
+  if (localStorage.getItem('discord_token')) {
+    loadGuilds();
+  } else {
+    showScreen('screen-login');
+  }
 };
