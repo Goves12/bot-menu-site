@@ -10,12 +10,23 @@ function showScreen(id) {
 }
 
 async function loadGuilds() {
+  // Берём токен из памяти браузера
+  const token = localStorage.getItem('discord_token');
+  
+  if (!token) {
+    showScreen('screen-login');
+    return;
+  }
+
   try {
-    const response = await fetch(`${API_URL}/api/user/guilds`, { 
-        credentials: 'include' 
+    // Передаём токен в заголовке Authorization
+    const response = await fetch(`${API_URL}/api/user/guilds`, {
+      headers: { 'Authorization': `Bearer ${token}` }
     });
     
     if (!response.ok) {
+      // Если токен просрочен или неверный — просим войти заново
+      localStorage.removeItem('discord_token');
       showScreen('screen-login'); 
       return;
     }
@@ -53,7 +64,6 @@ async function loadGuilds() {
             localStorage.setItem('currentGuildId', guild.id);
             localStorage.setItem('currentGuildName', guild.name);
             alert(`Переход к настройкам сервера: ${guild.name}`);
-            // showScreen('screen-settings'); // Для 3-го экрана
           } else {
             alert(`У вас нет прав на управление сервером "${guild.name}".`);
           }
@@ -68,7 +78,24 @@ async function loadGuilds() {
   }
 }
 
+// Проверяем, не вернул ли нас Discord с токеном в адресной строке
 window.onload = () => {
-  showScreen('screen-servers');
-  loadGuilds();
+  const hash = window.location.hash;
+  if (hash && hash.includes('token=')) {
+    // Извлекаем токен из #token=...
+    const token = hash.split('token=')[1];
+    if (token) {
+      localStorage.setItem('discord_token', token);
+      // Очищаем адресную строку, чтобы токен не мозолил глаза
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }
+
+  // Если токен есть — показываем сервера, иначе — экран входа
+  if (localStorage.getItem('discord_token')) {
+    showScreen('screen-servers');
+    loadGuilds();
+  } else {
+    showScreen('screen-login');
+  }
 };
