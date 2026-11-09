@@ -265,17 +265,33 @@ function addAccountingRow(id, name, channelId, channelName, items = []) {
     menu.classList.toggle('active');
   };
 
-  row.querySelector('.delete-btn').onclick = () => {
-    row.remove();
-    if (container.children.length === 0) {
-      container.innerHTML = 'У вас пока нет созданных учётов...';
-      container.style.padding = '40px'; container.style.textAlign = 'center';
-      document.querySelector('.badge').textContent = '0 опубликованных';
-      document.querySelector('.limit-text').textContent = '0/100 использовано';
+  // 🔥 УДАЛЕНИЕ ИЗ БАЗЫ ДАННЫХ
+  row.querySelector('.delete-btn').onclick = async () => {
+    if (!confirm('Вы уверены, что хотите удалить этот учёт?')) return;
+
+    try {
+      // Отправляем запрос на удаление в базу
+      const response = await fetch(`${API_URL}/api/accounting/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) throw new Error('Ошибка удаления');
+
+      // Удаляем строку из таблицы
+      row.remove();
+      
+      if (container.children.length === 0) {
+        container.innerHTML = 'У вас пока нет созданных учётов...';
+        container.style.padding = '40px'; container.style.textAlign = 'center';
+        document.querySelector('.badge').textContent = '0 опубликованных';
+        document.querySelector('.limit-text').textContent = '0/100 использовано';
+      }
+    } catch (e) {
+      alert('Не удалось удалить: ' + e.message);
     }
   };
 
-  // РЕДАКТИРОВАНИЕ (теперь передаем ID)
+  // РЕДАКТИРОВАНИЕ
   row.querySelector('.edit-btn').onclick = () => {
     openEditModal(id);
   };
