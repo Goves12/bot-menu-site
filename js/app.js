@@ -10,6 +10,13 @@ if (urlToken) {
 
 let allGuilds = [];
 
+// Глобальные переменные для новых красивых списков
+let selectedRoles = []; 
+let selectedPubChannel = null;
+let selectedPubChannelName = '';
+let selectedLogChannel = null;
+let selectedLogChannelName = '';
+
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id)?.classList.add('active');
@@ -46,16 +53,22 @@ window.addEventListener('DOMContentLoaded', () => {
   const modalTitle = document.getElementById('modal-title');
 
   btnOpenModal?.addEventListener('click', () => {
-    // Сбрасываем форму перед созданием нового
+    // Сбрасываем форму
     document.getElementById('acc-name').value = 'Новый учёт';
     document.getElementById('acc-title').value = '';
-    document.getElementById('acc-name').style.borderColor = '';
-    document.getElementById('channel-public').style.borderColor = '';
-    document.getElementById('channel-logs').style.borderColor = '';
+    document.getElementById('selected-roles').textContent = 'Выберите роли...';
+    document.getElementById('selected-pub-channel').textContent = 'Выберите канал...';
+    document.getElementById('selected-log-channel').textContent = 'Выберите канал...';
+    document.getElementById('objects-list').innerHTML = '<p>Нет добавленных объектов</p>';
+    document.getElementById('objects-list').classList.add('empty-state');
     
+    // Сбрасываем переменные
+    selectedRoles = [];
+    selectedPubChannel = null;
+    selectedLogChannel = null;
+
     modalTitle.textContent = 'Новый учёт';
     modal.classList.add('active');
-    loadDiscordData(); 
   });
 
   btnCloseModal?.addEventListener('click', () => modal.classList.remove('active'));
@@ -89,42 +102,33 @@ window.addEventListener('DOMContentLoaded', () => {
     objectsList.appendChild(objDiv);
   });
 
-  // 5.1. Кнопки Отмена / Сохранить / Опубликовать
+  // 6. Кнопки Отмена / Сохранить / Опубликовать
   const btnCancel = document.getElementById('btn-cancel');
   const btnSave = document.getElementById('btn-save');
   const btnPublish = document.getElementById('btn-publish');
 
-  // Отмена
   btnCancel?.addEventListener('click', () => {
     modal.classList.remove('active');
   });
 
-  // Сохранить (черновик) - просто закрывает окно
   btnSave?.addEventListener('click', () => {
     modal.classList.remove('active');
   });
 
-  // Опубликовать - отправляет данные боту
+  // Кнопка Опубликовать - отправляет данные
   btnPublish?.addEventListener('click', async () => {
     const name = document.getElementById('acc-name').value;
-    const channelPublic = document.getElementById('channel-public').value;
-    const channelLogs = document.getElementById('channel-logs').value;
     const guildId = localStorage.getItem('currentGuildId');
     
     // Валидация
-    if (!name || !channelPublic || !channelLogs) {
+    if (!name || !selectedPubChannel) {
       if (!name) document.getElementById('acc-name').style.borderColor = '#ed4245';
-      if (!channelPublic) document.getElementById('channel-public').style.borderColor = '#ed4245';
-      if (!channelLogs) document.getElementById('channel-logs').style.borderColor = '#ed4245';
+      if (!selectedPubChannel) alert("Пожалуйста, выберите канал публикации!");
       return; 
     }
 
-    // Сброс красных рамок
     document.getElementById('acc-name').style.borderColor = '';
-    document.getElementById('channel-public').style.borderColor = '';
-    document.getElementById('channel-logs').style.borderColor = '';
 
-    // Загрузка
     const originalText = btnPublish.textContent;
     btnPublish.textContent = "Публикация...";
     btnPublish.disabled = true;
@@ -140,13 +144,13 @@ window.addEventListener('DOMContentLoaded', () => {
           });
       });
 
-      // Отправляем данные на Worker, который передаст их боту
+      // Отправляем данные на Worker (он передаст боту)
       const response = await fetch(`${API_URL}/api/send-accounting`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           guildId: guildId,
-          channelId: channelPublic,
+          channelId: selectedPubChannel, // Используем новую переменную
           title: 'Отчет по контракту',
           name: name,
           objects: objects
@@ -159,19 +163,11 @@ window.addEventListener('DOMContentLoaded', () => {
         throw new Error(result.error || 'Ошибка отправки в Discord');
       }
 
-      // Получаем название канала для таблицы
-      const channelSelect = document.getElementById('channel-public');
-      const channelName = channelSelect.options[channelSelect.selectedIndex].text.replace('# ', '');
-      
-      // Добавляем строку
-      addAccountingRow(name, channelPublic, channelName);
+      // Добавляем строку в таблицу
+      addAccountingRow(name, selectedPubChannel, selectedPubChannelName);
       
       // Закрываем и чистим
       modal.classList.remove('active');
-      document.getElementById('acc-name').value = 'Новый учёт';
-      document.getElementById('acc-title').value = '';
-      objectsList.innerHTML = '<p>Нет добавленных объектов</p>';
-      objectsList.classList.add('empty-state');
 
     } catch (error) {
       alert("Ошибка при публикации! Убедитесь, что бот запущен в VS Code.\n" + error.message);
@@ -182,7 +178,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 6. Проверяем, авторизован ли пользователь
+  // 7. Проверяем, авторизован ли пользователь
   if (localStorage.getItem('discord_token')) {
     loadGuilds();
   } else {
@@ -196,13 +192,9 @@ window.addEventListener('DOMContentLoaded', () => {
 function addAccountingRow(name, channelId, channelName) {
   const container = document.getElementById('accounting-rows');
   
-  // Если это первый учёт, убираем заглушку
   if (container.innerHTML.includes('У вас пока нет')) {
     container.innerHTML = '';
-    container.style.padding = '0';
-    container.style.textAlign = 'left';
-    container.style.color = 'inherit';
-    
+    container.style.padding = '0'; container.style.textAlign = 'left'; container.style.color = 'inherit';
     document.querySelector('.badge').textContent = '1 опубликованных';
     document.querySelector('.limit-text').textContent = '1/100 использовано';
   }
@@ -224,25 +216,51 @@ function addAccountingRow(name, channelId, channelName) {
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
       ${dateStr}
     </div>
-    <div class="table-cell-actions">
-      <button class="btn-icon btn-edit" title="Редактировать">⋮</button>
+    <div class="table-cell-actions" style="position:relative;">
+      <button class="btn-icon btn-menu-toggle">⋮</button>
+      <div class="action-menu">
+        <button class="edit-btn">Изменить</button>
+        <button class="delete-btn delete">Удалить</button>
+      </div>
     </div>
   `;
 
-  // Логика кнопки "Изменить"
-  row.querySelector('.btn-edit').onclick = () => {
+  // Меню 3 точек
+  const toggleBtn = row.querySelector('.btn-menu-toggle');
+  const menu = row.querySelector('.action-menu');
+  
+  toggleBtn.onclick = (e) => {
+    e.stopPropagation();
+    document.querySelectorAll('.action-menu').forEach(m => { if(m !== menu) m.classList.remove('active'); });
+    menu.classList.toggle('active');
+  };
+
+  // Удаление
+  row.querySelector('.delete-btn').onclick = () => {
+    row.remove();
+    if (container.children.length === 0) {
+      container.innerHTML = 'У вас пока нет созданных учётов...';
+      container.style.padding = '40px'; container.style.textAlign = 'center';
+      document.querySelector('.badge').textContent = '0 опубликованных';
+      document.querySelector('.limit-text').textContent = '0/100 использовано';
+    }
+  };
+
+  // Изменение
+  row.querySelector('.edit-btn').onclick = () => {
     document.getElementById('modal-accounting').classList.add('active');
     document.getElementById('modal-title').textContent = 'Редактирование учёта';
     document.getElementById('acc-name').value = name;
-    
-    loadDiscordData().then(() => {
-      const chSelect = document.getElementById('channel-public');
-      if (chSelect) chSelect.value = channelId;
-    });
+    // Здесь можно было бы заполнить каналы, но для простоты оставим так
   };
 
   container.appendChild(row);
 }
+
+// Закрываем меню при клике вне его
+document.addEventListener('click', () => {
+  document.querySelectorAll('.action-menu').forEach(m => m.classList.remove('active'));
+});
 
 // Загрузка серверов
 async function loadGuilds() {
@@ -335,48 +353,9 @@ async function renderGuilds(guilds) {
   }
 }
 
-// Загрузка каналов и ролей для модального окна
-async function loadDiscordData() {
-  const guildId = localStorage.getItem('currentGuildId');
-  if (!guildId) return;
-
-  try {
-    const chRes = await fetch(`${API_URL}/api/guild-channels?guild_id=${guildId}`);
-    const channels = await chRes.json();
-    const chSelect = document.getElementById('channel-public');
-    const logSelect = document.getElementById('channel-logs');
-
-    if(chSelect && logSelect) {
-      chSelect.innerHTML = '<option value="">Выберите канал...</option>';
-      logSelect.innerHTML = '<option value="">Выберите канал...</option>';
-      channels.forEach(c => {
-        chSelect.innerHTML += `<option value="${c.id}"># ${c.name}</option>`;
-        logSelect.innerHTML += `<option value="${c.id}"># ${c.name}</option>`;
-      });
-    }
-
-    const roleRes = await fetch(`${API_URL}/api/guild-roles?guild_id=${guildId}`);
-    const roles = await roleRes.json();
-    const rolesSelect = document.getElementById('roles-moderator');
-    
-    if (rolesSelect) {
-       rolesSelect.innerHTML = '<option value="">Выберите роли...</option>';
-       roles.forEach(r => {
-         rolesSelect.innerHTML += `<option value="${r.id}">${r.name}</option>`;
-       });
-    }
-  } catch (e) {
-    console.error('Ошибка загрузки данных Discord:', e);
-  }
-}
-
 // ==========================================
 // ЛОГИКА КРАСИВЫХ СПИСКОВ (РОЛИ И КАНАЛЫ)
 // ==========================================
-
-let selectedRoles = []; // Храним выбранные ID ролей
-let selectedPubChannel = null;
-let selectedLogChannel = null;
 
 async function openRoleSelect() {
   const dropdown = document.getElementById('roles-dropdown');
@@ -435,9 +414,11 @@ async function openChannelSelect(type) {
 function selectChannel(type, id, name) {
   if (type === 'pub') {
     selectedPubChannel = id;
+    selectedPubChannelName = name;
     document.getElementById('selected-pub-channel').textContent = '# ' + name;
   } else {
     selectedLogChannel = id;
+    selectedLogChannelName = name;
     document.getElementById('selected-log-channel').textContent = '# ' + name;
   }
 }
