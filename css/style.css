@@ -176,7 +176,7 @@ body::after { background: #eb459e; bottom: -100px; right: -100px; animation-dela
 .btn-small:hover { background: #5865f2; color: #fff; }
 
 /* Формы */
-.form-group { display: flex; flex-direction: column; gap: 8px; }
+.form-group { display: flex; flex-direction: column; gap: 8px; position: relative; }
 .form-group label { font-size: 14px; font-weight: 600; color: #e3e5e8; }
 .form-input { background: #1e222d; border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; padding: 12px 16px; border-radius: 8px; font-family: inherit; font-size: 14px; outline: none; }
 .form-input:focus { border-color: #5865f2; }
@@ -187,6 +187,7 @@ body::after { background: #eb459e; bottom: -100px; right: -100px; animation-dela
 .object-item input { flex: 1; }
 .btn-remove-obj { background: rgba(237, 66, 69, 0.1); color: #ed4245; border: none; border-radius: 6px; padding: 0 12px; cursor: pointer; }
 .btn-remove-obj:hover { background: rgba(237, 66, 69, 0.2); }
+
 /* Красивые селекты */
 .custom-select-box {
   display: flex;
@@ -217,17 +218,33 @@ body::after { background: #eb459e; bottom: -100px; right: -100px; animation-dela
 /* Выпадающие списки (компактные) */
 .dropdown-content {
   position: absolute;
+  top: 100%; /* Появляется сразу под полем */
+  left: 0;
   background: #1e222d;
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 8px;
   width: 100%;
-  max-height: 200px; /* Ограничиваем высоту */
-  overflow-y: auto; /* Добавляем скролл, если не влезает */
+  max-height: 200px; /* ОГРАНИЧИВАЕМ ВЫСОТУ */
+  overflow-y: auto; /* Скролл, если не влезает */
   z-index: 100;
   margin-top: 4px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  padding-bottom: 10px; /* Место для кнопки "Готово" */
+  padding-bottom: 10px;
 }
+
+/* Стили для пунктов внутри списка */
+.dropdown-item {
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 14px;
+}
+.dropdown-item:hover { background: rgba(255, 255, 255, 0.05); }
+.dropdown-item input { cursor: pointer; }
+
 /* Кнопка "Готово" внутри списка */
 .dropdown-submit-btn {
   display: block;
