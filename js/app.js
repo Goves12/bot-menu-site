@@ -10,7 +10,6 @@ function showScreen(id) {
 }
 
 async function loadGuilds() {
-  // Берём токен из памяти браузера
   const token = localStorage.getItem('discord_token');
   
   if (!token) {
@@ -19,13 +18,11 @@ async function loadGuilds() {
   }
 
   try {
-    // Передаём токен в заголовке Authorization
     const response = await fetch(`${API_URL}/api/user/guilds`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     
     if (!response.ok) {
-      // Если токен просрочен или неверный — просим войти заново
       localStorage.removeItem('discord_token');
       showScreen('screen-login'); 
       return;
@@ -78,24 +75,27 @@ async function loadGuilds() {
   }
 }
 
-// Проверяем, не вернул ли нас Discord с токеном в адресной строке
+// === САМОЕ ВАЖНОЕ: ЛОВИМ ТОКЕН ПРИ ЗАГРУЗКЕ ===
 window.onload = () => {
+  // Смотрим, есть ли в адресе #token=...
   const hash = window.location.hash;
+  
   if (hash && hash.includes('token=')) {
-    // Извлекаем токен из #token=...
+    // Вытаскиваем токен
     const token = hash.split('token=')[1];
     if (token) {
+      // Сохраняем в память браузера
       localStorage.setItem('discord_token', token);
-      // Очищаем адресную строку, чтобы токен не мозолил глаза
+      // Очищаем адресную строку, чтобы токен не висел на виду
       window.history.replaceState(null, '', window.location.pathname);
     }
   }
 
-  // Если токен есть — показываем сервера, иначе — экран входа
+  // Проверяем, есть ли токен в памяти
   if (localStorage.getItem('discord_token')) {
-    showScreen('screen-servers');
-    loadGuilds();
+    showScreen('screen-servers'); // Показываем экран с серверами
+    loadGuilds(); // Загружаем список
   } else {
-    showScreen('screen-login');
+    showScreen('screen-login'); // Если нет - на вход
   }
 };
