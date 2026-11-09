@@ -136,12 +136,25 @@ body::after { background: #eb459e; bottom: -100px; right: -100px; animation-dela
   padding: 16px 20px; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s;
 }
 .btn-create:hover { background: #262b38; }
-.accounting-list-wrap { background: #1e222d; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; overflow: hidden; }
+
+/* 🔥 ИСПРАВЛЕНО: overflow visible, чтобы меню не обрезалось */
+.accounting-list-wrap { 
+  background: #1e222d; 
+  border: 1px solid rgba(255, 255, 255, 0.05); 
+  border-radius: 12px; 
+  overflow: visible; 
+}
 .accounting-list-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
 .accounting-list-header h3 { font-size: 16px; display: flex; align-items: center; gap: 12px; }
 .badge { background: rgba(87, 242, 135, 0.1); color: #57f287; font-size: 12px; padding: 4px 8px; border-radius: 6px; font-weight: 600; }
 .limit-text { color: #9aa0b0; font-size: 13px; }
-.accounting-table { display: flex; flex-direction: column; }
+
+/* 🔥 ИСПРАВЛЕНО: overflow visible для таблицы */
+.accounting-table { 
+  display: flex; 
+  flex-direction: column; 
+  overflow: visible; 
+}
 .table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 50px; padding: 12px 20px; font-size: 12px; color: #9aa0b0; text-transform: uppercase; letter-spacing: 0.5px; }
 .table-row { display: grid; grid-template-columns: 2fr 1fr 1fr 50px; padding: 16px 20px; align-items: center; border-top: 1px solid rgba(255, 255, 255, 0.05); transition: background 0.2s; }
 .table-row:hover { background: rgba(255, 255, 255, 0.02); }
@@ -218,14 +231,14 @@ body::after { background: #eb459e; bottom: -100px; right: -100px; animation-dela
 /* Выпадающие списки (компактные) */
 .dropdown-content {
   position: absolute;
-  top: 100%; /* Появляется сразу под полем */
+  top: 100%;
   left: 0;
   background: #1e222d;
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 8px;
   width: 100%;
-  max-height: 200px; /* ОГРАНИЧИВАЕМ ВЫСОТУ */
-  overflow-y: auto; /* Скролл, если не влезает */
+  max-height: 200px;
+  overflow-y: auto;
   z-index: 100;
   margin-top: 4px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -263,8 +276,9 @@ body::after { background: #eb459e; bottom: -100px; right: -100px; animation-dela
 .dropdown-submit-btn:hover {
   background: #4752c4;
 }
+
 /* =========================================
-   СТИЛИ ДЛЯ КРАСИВОГО МЕНЮ (3 ТОЧКИ)
+   МЕНЮ 3 ТОЧКИ (исправлено)
    ========================================= */
 .table-cell-actions {
   position: relative;
@@ -299,9 +313,9 @@ body::after { background: #eb459e; bottom: -100px; right: -100px; animation-dela
   border-radius: 8px;
   display: none;
   flex-direction: column;
-  min-width: 140px;
+  min-width: 160px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  z-index: 100;
+  z-index: 9999; /* 🔥 ВЫСОКИЙ Z-INDEX, чтобы быть поверх всего */
   overflow: hidden;
   animation: menuFadeIn 0.2s ease;
 }
