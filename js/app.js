@@ -35,7 +35,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (title === 'Учёт') {
       card.querySelector('button').onclick = () => {
         showScreen('screen-accounting');
-        loadAccountingData(); // Загружаем данные из базы при входе
+        loadAccountingData(); 
       };
     }
   });
@@ -125,7 +125,6 @@ window.addEventListener('DOMContentLoaded', () => {
     btnPublish.style.opacity = '0.7';
 
     try {
-      // Собираем объекты
       const items = [];
       document.querySelectorAll('.object-item').forEach(item => {
           items.push({
@@ -134,7 +133,7 @@ window.addEventListener('DOMContentLoaded', () => {
           });
       });
 
-      // 1. Отправляем данные на Worker (сохраняем в БД)
+      // 1. Сохраняем в БД
       const saveResponse = await fetch(`${API_URL}/api/accounting`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -149,7 +148,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
       if (!saveResponse.ok) throw new Error('Ошибка сохранения в БД');
 
-      // 2. Отправляем данные боту для отправки в Discord
+      // 2. Отправляем боту
       const botResponse = await fetch(`${API_URL}/api/send-accounting`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -165,8 +164,8 @@ window.addEventListener('DOMContentLoaded', () => {
       const result = await botResponse.json();
       if (!result.success) throw new Error(result.error || 'Бот не отвечает');
 
-      // 3. Добавляем строку в таблицу на сайте
-      addAccountingRow(name, selectedPubChannel, selectedPubChannelName, items);
+      // 3. Перезагружаем таблицу
+      loadAccountingData();
       
       modal.classList.remove('active');
     } catch (error) {
@@ -187,7 +186,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // --- ФУНКЦИИ ДЛЯ РАБОТЫ С БАЗОЙ ---
 
-// Загрузка данных из базы при входе на экран
 async function loadAccountingData() {
   const guildId = localStorage.getItem('currentGuildId');
   if (!guildId) return;
@@ -196,7 +194,6 @@ async function loadAccountingData() {
     const response = await fetch(`${API_URL}/api/accounting?guild_id=${guildId}`);
     const data = await response.json();
     
-    // Очищаем таблицу
     const container = document.getElementById('accounting-rows');
     container.innerHTML = '';
     
@@ -213,14 +210,14 @@ async function loadAccountingData() {
     container.style.padding = '0'; container.style.textAlign = 'left'; container.style.color = 'inherit';
 
     data.forEach(item => {
-      addAccountingRow(item.name, item.channel_id, item.channel_name, item.items);
+      addAccountingRow(item.id, item.name, item.channel_id, item.channel_name, item.items);
     });
   } catch (e) {
     console.error('Ошибка загрузки:', e);
   }
 }
 
-function addAccountingRow(name, channelId, channelName, items = []) {
+function addAccountingRow(id, name, channelId, channelName, items = []) {
   const container = document.getElementById('accounting-rows');
   
   const now = new Date();
@@ -278,20 +275,71 @@ function addAccountingRow(name, channelId, channelName, items = []) {
     }
   };
 
+  // РЕДАКТИРОВАНИЕ (теперь передаем ID)
   row.querySelector('.edit-btn').onclick = () => {
-    document.getElementById('modal-accounting').classList.add('active');
-    document.getElementById('modal-title').textContent = 'Редактирование учёта';
-    document.getElementById('acc-name').value = name;
+    openEditModal(id);
   };
 
   container.appendChild(row);
+}
+
+// Функция открытия окна редактирования
+async function openEditModal(id) {
+  try {
+    const response = await fetch(`${API_URL}/api/accounting/${id}`);
+    if (!response.ok) throw new Error('Не удалось загрузить данные');
+    const data = await response.json();
+
+    // Открываем окно
+    document.getElementById('modal-accounting').classList.add('active');
+    document.getElementById('modal-title').textContent = 'Редактирование учёта';
+
+    // Заполняем поля
+    document.getElementById('acc-name').value = data.name;
+    
+    // Устанавливаем канал
+    selectedPubChannel = data.channel_id;
+    selectedPubChannelName = data.channel_name;
+    document.getElementById('selected-pub-channel').textContent = '# ' + data.channel_name;
+
+    // Заполняем предметы
+    const objectsList = document.getElementById('objects-list');
+    objectsList.innerHTML = '';
+    
+    if (data.items && data.items.length > 0) {
+      objectsList.classList.remove('empty-state');
+      data.items.forEach(item => {
+        const objDiv = document.createElement('div');
+        objDiv.className = 'object-item';
+        objDiv.innerHTML = `
+          <input type="text" class="form-input obj-name" value="${item.name}">
+          <input type="number" class="form-input obj-count" value="${item.count}" style="max-width:100px;">
+          <button class="btn-remove-obj" type="button">✕</button>
+        `;
+        objDiv.querySelector('.btn-remove-obj').onclick = () => {
+          objDiv.remove();
+          if (objectsList.children.length === 0) {
+            objectsList.classList.add('empty-state');
+            objectsList.innerHTML = '<p>Нет добавленных объектов</p>';
+          }
+        };
+        objectsList.appendChild(objDiv);
+      });
+    } else {
+      objectsList.classList.add('empty-state');
+      objectsList.innerHTML = '<p>Нет добавленных объектов</p>';
+    }
+
+  } catch (e) {
+    alert('Ошибка загрузки: ' + e.message);
+  }
 }
 
 document.addEventListener('click', () => {
   document.querySelectorAll('.action-menu').forEach(m => m.classList.remove('active'));
 });
 
-// --- ОСТАЛЬНЫЕ ФУНКЦИИ (ЗАГРУЗКА СЕРВЕРОВ, КАНАЛОВ, РОЛЕЙ) ---
+// --- ОСТАЛЬНЫЕ ФУНКЦИИ (БЕЗ ИЗМЕНЕНИЙ) ---
 async function loadGuilds() {
   const token = localStorage.getItem('discord_token');
   if (!token) { showScreen('screen-login'); return; }
@@ -300,13 +348,11 @@ async function loadGuilds() {
     const response = await fetch(`${API_URL}/api/user/guilds`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
-    
     if (!response.ok) {
       localStorage.removeItem('discord_token');
       showScreen('screen-login'); 
       return;
     }
-
     allGuilds = await response.json();
     await renderGuilds(allGuilds); 
     showScreen('screen-servers');
@@ -330,7 +376,6 @@ async function renderGuilds(guilds) {
     const card = document.createElement('div');
     card.className = 'server-card';
     const icon = guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png` : `https://cdn.discordapp.com/embed/avatars/0.png`;
-    
     const isAdmin = (BigInt(guild.permissions || 0) & 8n) === 8n || (BigInt(guild.permissions || 0) & 32n) === 32n;
 
     card.innerHTML = `
