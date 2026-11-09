@@ -311,3 +311,130 @@ body::after { background: #eb459e; bottom: -100px; right: -100px; animation-dela
 .btn-blue:hover {
   background: var(--accent-hover);
 }
+
+/* =========================================
+   ЭКРАН УЧЁТА (СКЛАД)
+   ========================================= */
+.accounting-action-bar {
+  margin-bottom: 24px;
+}
+
+.btn-create {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: #1e222d;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 16px 20px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-create:hover { background: #262b38; }
+
+.accounting-list-wrap {
+  background: #1e222d;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.accounting-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.accounting-list-header h3 {
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.badge {
+  background: rgba(87, 242, 135, 0.1);
+  color: #57f287;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.limit-text {
+  color: #9aa0b0;
+  font-size: 13px;
+}
+
+/* Таблица */
+.accounting-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 50px;
+  padding: 12px 20px;
+  font-size: 12px;
+  color: #9aa0b0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 50px;
+  padding: 16px 20px;
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.2s;
+}
+.table-row:hover { background: rgba(255, 255, 255, 0.02); }
+
+.table-cell-main .accounting-name {
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.table-cell-main .accounting-channels {
+  font-size: 13px;
+  color: #9aa0b0;
+}
+
+.status-badge {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+.status-green {
+  background: rgba(87, 242, 135, 0.1);
+  color: #57f287;
+}
+
+.table-cell-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #9aa0b0;
+}
+
+.btn-icon {
+  background: transparent;
+  border: none;
+  color: #9aa0b0;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+.btn-icon:hover { color: #fff; background: rgba(255, 255, 255, 0.1); }

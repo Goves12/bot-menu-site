@@ -95,6 +95,63 @@
   </div>
 </section>
 
+<!-- ================= ЭКРАН 4: УЧЁТ (СКЛАД) ================= -->
+<section id="screen-accounting" class="screen">
+  <div class="servers-wrap">
+    
+    <!-- Шапка -->
+    <div class="settings-header">
+      <button id="back-to-settings" class="btn-back">← Назад</button>
+      <h2 class="settings-title">Учёт</h2>
+    </div>
+
+    <p class="subtitle">Управляйте предметами, автомобилями или другими ресурсами сервера.</p>
+
+    <!-- Кнопка создания -->
+    <div class="accounting-action-bar">
+      <button id="create-new-accounting" class="btn-create">
+        <span>Создать новый учёт</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      </button>
+    </div>
+
+    <!-- Список учетов -->
+    <div class="accounting-list-wrap">
+      <div class="accounting-list-header">
+        <h3>Ваши Учёты <span class="badge">1 опубликованных</span></h3>
+        <span class="limit-text">1/100 использовано</span>
+      </div>
+      
+      <div class="accounting-table">
+        <div class="table-header">
+          <span>Учёт</span>
+          <span>Статус</span>
+          <span>Время</span>
+          <span></span>
+        </div>
+        <!-- Пример строки (потом это будет генерировать JS) -->
+        <div class="table-row">
+          <div class="table-cell-main">
+            <div class="accounting-name">Новый учёт</div>
+            <div class="accounting-channels"># 🛒 "склад</div>
+          </div>
+          <div class="table-cell-status">
+            <span class="status-badge status-green">✓ Опубликован</span>
+          </div>
+          <div class="table-cell-time">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            8 мая 2026 г. в 19:22
+          </div>
+          <div class="table-cell-actions">
+            <button class="btn-icon">⋮</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
 <script src="./js/app.js"></script>
 </body>
 </html>

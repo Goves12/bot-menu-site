@@ -125,3 +125,18 @@ window.onload = () => {
     showScreen('screen-login');
   }
 };
+
+// Переход на экран Учёта при нажатии на карточку
+document.querySelectorAll('.module-card').forEach(card => {
+  const title = card.querySelector('h3').textContent;
+  if (title === 'Учёт') {
+    card.querySelector('button').onclick = () => {
+      showScreen('screen-accounting');
+    };
+  }
+});
+
+// Кнопка "Назад" с экрана учёта
+document.getElementById('back-to-settings')?.addEventListener('click', () => {
+  showScreen('screen-settings');
+});
