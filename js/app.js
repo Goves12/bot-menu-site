@@ -67,6 +67,11 @@ window.addEventListener('DOMContentLoaded', () => {
     selectedPubChannel = null;
     selectedLogChannel = null;
 
+    // Сбрасываем выпадающие списки, чтобы они загрузились заново
+    document.getElementById('roles-dropdown').innerHTML = '<p style="padding: 10px; color: #9aa0b0; font-size: 12px;">Загрузка ролей...</p>';
+    document.getElementById('pub-dropdown').innerHTML = '<p style="padding: 10px; color: #9aa0b0; font-size: 12px;">Загрузка каналов...</p>';
+    document.getElementById('log-dropdown').innerHTML = '<p style="padding: 10px; color: #9aa0b0; font-size: 12px;">Загрузка каналов...</p>';
+
     modalTitle.textContent = 'Новый учёт';
     modal.classList.add('active');
   });
@@ -150,7 +155,7 @@ window.addEventListener('DOMContentLoaded', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           guildId: guildId,
-          channelId: selectedPubChannel, // Используем новую переменную
+          channelId: selectedPubChannel,
           title: 'Отчет по контракту',
           name: name,
           objects: objects
@@ -251,7 +256,6 @@ function addAccountingRow(name, channelId, channelName) {
     document.getElementById('modal-accounting').classList.add('active');
     document.getElementById('modal-title').textContent = 'Редактирование учёта';
     document.getElementById('acc-name').value = name;
-    // Здесь можно было бы заполнить каналы, но для простоты оставим так
   };
 
   container.appendChild(row);
@@ -359,7 +363,16 @@ async function renderGuilds(guilds) {
 
 async function openRoleSelect() {
   const dropdown = document.getElementById('roles-dropdown');
-  dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+  
+  // Закрываем другие открытые списки
+  document.querySelectorAll('.dropdown-content').forEach(d => { if(d !== dropdown) d.style.display = 'none'; });
+
+  if (dropdown.style.display === 'block') {
+    dropdown.style.display = 'none';
+    return;
+  }
+
+  dropdown.style.display = 'block';
   
   if (dropdown.innerHTML.includes('Загрузка')) {
     const guildId = localStorage.getItem('currentGuildId');
@@ -368,11 +381,19 @@ async function openRoleSelect() {
     
     dropdown.innerHTML = '';
     roles.forEach(r => {
+      const isChecked = selectedRoles.some(role => role.id === r.id) ? 'checked' : '';
       const item = document.createElement('div');
       item.className = 'dropdown-item';
-      item.innerHTML = `<input type="checkbox" value="${r.id}" onchange="toggleRole('${r.id}', '${r.name}', this)"> <span>${r.name}</span>`;
+      item.innerHTML = `<input type="checkbox" value="${r.id}" ${isChecked} onchange="toggleRole('${r.id}', '${r.name}', this)"> <span>${r.name}</span>`;
       dropdown.appendChild(item);
     });
+
+    // Кнопка "Готово"
+    const submitBtn = document.createElement('button');
+    submitBtn.className = 'dropdown-submit-btn';
+    submitBtn.textContent = 'Готово';
+    submitBtn.onclick = () => { dropdown.style.display = 'none'; };
+    dropdown.appendChild(submitBtn);
   }
 }
 
@@ -394,7 +415,16 @@ function updateRolesDisplay() {
 async function openChannelSelect(type) {
   const dropdownId = type === 'pub' ? 'pub-dropdown' : 'log-dropdown';
   const dropdown = document.getElementById(dropdownId);
-  dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+
+  // Закрываем другие открытые списки
+  document.querySelectorAll('.dropdown-content').forEach(d => { if(d !== dropdown) d.style.display = 'none'; });
+
+  if (dropdown.style.display === 'block') {
+    dropdown.style.display = 'none';
+    return;
+  }
+
+  dropdown.style.display = 'block';
 
   if (dropdown.innerHTML.includes('Загрузка')) {
     const guildId = localStorage.getItem('currentGuildId');
@@ -403,11 +433,19 @@ async function openChannelSelect(type) {
 
     dropdown.innerHTML = '';
     channels.forEach(c => {
+      const isChecked = (type === 'pub' && selectedPubChannel === c.id) || (type === 'log' && selectedLogChannel === c.id) ? 'checked' : '';
       const item = document.createElement('div');
       item.className = 'dropdown-item';
-      item.innerHTML = `<input type="radio" name="${type}-channel" value="${c.id}" onchange="selectChannel('${type}', '${c.id}', '${c.name}')"> <span># ${c.name}</span>`;
+      item.innerHTML = `<input type="radio" name="${type}-channel" value="${c.id}" ${isChecked} onchange="selectChannel('${type}', '${c.id}', '${c.name}')"> <span># ${c.name}</span>`;
       dropdown.appendChild(item);
     });
+
+    // Кнопка "Готово"
+    const submitBtn = document.createElement('button');
+    submitBtn.className = 'dropdown-submit-btn';
+    submitBtn.textContent = 'Готово';
+    submitBtn.onclick = () => { dropdown.style.display = 'none'; };
+    dropdown.appendChild(submitBtn);
   }
 }
 
@@ -422,3 +460,10 @@ function selectChannel(type, id, name) {
     document.getElementById('selected-log-channel').textContent = '# ' + name;
   }
 }
+
+// Закрываем выпадающие списки при клике вне их
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.custom-select-box') && !e.target.closest('.dropdown-content')) {
+    document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none');
+  }
+});
