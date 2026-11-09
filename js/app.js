@@ -36,7 +36,7 @@ async function loadGuilds() {
     }
 
     allGuilds = await response.json();
-    renderGuilds(allGuilds);
+    await renderGuilds(allGuilds); // Добавили await, так как теперь функция асинхронная
     showScreen('screen-servers');
     
   } catch (error) {
@@ -45,7 +45,8 @@ async function loadGuilds() {
   }
 }
 
-function renderGuilds(guilds) {
+// Функция стала асинхронной (async), чтобы проверять бота на каждом сервере
+async function renderGuilds(guilds) {
   const list = document.getElementById('servers-list');
   list.innerHTML = '';
 
@@ -54,31 +55,64 @@ function renderGuilds(guilds) {
     return;
   }
 
-  guilds.forEach(guild => {
+  for (const guild of guilds) {
     const card = document.createElement('div');
     card.className = 'server-card';
     const icon = guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png` : `https://cdn.discordapp.com/embed/avatars/0.png`;
     
-    // Проверяем права
     const isAdmin = (BigInt(guild.permissions || 0) & 8n) === 8n || (BigInt(guild.permissions || 0) & 32n) === 32n;
 
+    // Показываем карточку сразу, кнопка будет "Проверка..."
     card.innerHTML = `
       <div class="card-icon-wrap"><img src="${icon}"></div>
       <div class="name">${guild.name}</div>
-      <button class="btn-card ${isAdmin ? 'btn-dark' : 'btn-blue'}">${isAdmin ? 'Настройка' : 'Добавить'}</button>
+      <button class="btn-card btn-dark" disabled>Проверка...</button>
     `;
     
-    card.querySelector('button').onclick = () => {
-      if (isAdmin) {
-        // Просто и надежно: сохраняем ID и имя, переключаем экран
-        localStorage.setItem('currentGuildId', guild.id);
-        localStorage.setItem('currentGuildName', guild.name);
-        document.getElementById('current-server-name').textContent = guild.name;
-        showScreen('screen-settings');
-      }
-    };
     list.appendChild(card);
-  });
+    const btn = card.querySelector('button');
+
+    if (isAdmin) {
+      try {
+        // Спрашиваем у нашего сервера, есть ли бот на этом сервере
+        const checkRes = await fetch(`${API_URL}/api/check-bot?guild_id=${guild.id}`);
+        const checkData = await checkRes.json();
+
+        if (checkData.onServer) {
+          // Бот есть - показываем "Настройка"
+          btn.textContent = 'Настройка';
+          btn.disabled = false;
+          btn.className = 'btn-card btn-dark';
+          btn.onclick = () => {
+            localStorage.setItem('currentGuildId', guild.id);
+            localStorage.setItem('currentGuildName', guild.name);
+            document.getElementById('current-server-name').textContent = guild.name;
+            showScreen('screen-settings');
+          };
+        } else {
+          // Бота нет - показываем "Добавить бота"
+          btn.textContent = 'Добавить бота';
+          btn.disabled = false;
+          btn.className = 'btn-card btn-blue';
+          btn.onclick = () => {
+            // ⚠️ ЗАМЕНИ ТВОЙ_CLIENT_ID НА СВОЙ ID ПРИЛОЖЕНИЯ!
+            const inviteUrl = `https://discord.com/oauth2/authorize?client_id=1502787223249223740&scope=bot%20applications.commands&permissions=8&guild_id=${guild.id}`;
+            window.open(inviteUrl, '_blank');
+          };
+        }
+      } catch (e) {
+        // Если ошибка сети - даем кнопку "Добавить"
+        btn.textContent = 'Добавить бота';
+        btn.disabled = false;
+        btn.className = 'btn-card btn-blue';
+      }
+    } else {
+      // Если нет прав админа
+      btn.textContent = 'Нет прав';
+      btn.disabled = true;
+      btn.className = 'btn-card btn-dark';
+    }
+  }
 }
 
 // Кнопка "Назад"
