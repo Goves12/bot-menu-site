@@ -9,8 +9,6 @@ if (urlToken) {
 }
 
 let allGuilds = [];
-
-// Глобальные переменные для новых красивых списков
 let selectedRoles = []; 
 let selectedPubChannel = null;
 let selectedPubChannelName = '';
@@ -22,7 +20,6 @@ function showScreen(id) {
   document.getElementById(id)?.classList.add('active');
 }
 
-// Запуск при загрузке
 window.addEventListener('DOMContentLoaded', () => {
   // 1. Кнопка входа
   const loginBtn = document.getElementById('discord-login');
@@ -38,6 +35,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (title === 'Учёт') {
       card.querySelector('button').onclick = () => {
         showScreen('screen-accounting');
+        loadAccountingData(); // Загружаем данные из базы при входе
       };
     }
   });
@@ -53,7 +51,6 @@ window.addEventListener('DOMContentLoaded', () => {
   const modalTitle = document.getElementById('modal-title');
 
   btnOpenModal?.addEventListener('click', () => {
-    // Сбрасываем форму
     document.getElementById('acc-name').value = 'Новый учёт';
     document.getElementById('acc-title').value = '';
     document.getElementById('selected-roles').textContent = 'Выберите роли...';
@@ -62,15 +59,9 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('objects-list').innerHTML = '<p>Нет добавленных объектов</p>';
     document.getElementById('objects-list').classList.add('empty-state');
     
-    // Сбрасываем переменные
     selectedRoles = [];
     selectedPubChannel = null;
     selectedLogChannel = null;
-
-    // Сбрасываем выпадающие списки, чтобы они загрузились заново
-    document.getElementById('roles-dropdown').innerHTML = '<p style="padding: 10px; color: #9aa0b0; font-size: 12px;">Загрузка ролей...</p>';
-    document.getElementById('pub-dropdown').innerHTML = '<p style="padding: 10px; color: #9aa0b0; font-size: 12px;">Загрузка каналов...</p>';
-    document.getElementById('log-dropdown').innerHTML = '<p style="padding: 10px; color: #9aa0b0; font-size: 12px;">Загрузка каналов...</p>';
 
     modalTitle.textContent = 'Новый учёт';
     modal.classList.add('active');
@@ -92,8 +83,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const objDiv = document.createElement('div');
     objDiv.className = 'object-item';
     objDiv.innerHTML = `
-      <input type="text" class="form-input obj-name" placeholder="Название объекта (напр. Автомат)">
-      <input type="text" class="form-input obj-desc" placeholder="Описание (необязательно)">
+      <input type="text" class="form-input obj-name" placeholder="Название объекта">
+      <input type="number" class="form-input obj-count" placeholder="Кол-во" style="max-width:100px;">
       <button class="btn-remove-obj" type="button">✕</button>
     `;
 
@@ -112,20 +103,14 @@ window.addEventListener('DOMContentLoaded', () => {
   const btnSave = document.getElementById('btn-save');
   const btnPublish = document.getElementById('btn-publish');
 
-  btnCancel?.addEventListener('click', () => {
-    modal.classList.remove('active');
-  });
-
-  btnSave?.addEventListener('click', () => {
-    modal.classList.remove('active');
-  });
+  btnCancel?.addEventListener('click', () => modal.classList.remove('active'));
+  btnSave?.addEventListener('click', () => modal.classList.remove('active'));
 
   // Кнопка Опубликовать - отправляет данные
   btnPublish?.addEventListener('click', async () => {
     const name = document.getElementById('acc-name').value;
     const guildId = localStorage.getItem('currentGuildId');
     
-    // Валидация
     if (!name || !selectedPubChannel) {
       if (!name) document.getElementById('acc-name').style.borderColor = '#ed4245';
       if (!selectedPubChannel) alert("Пожалуйста, выберите канал публикации!");
@@ -141,41 +126,51 @@ window.addEventListener('DOMContentLoaded', () => {
 
     try {
       // Собираем объекты
-      const objects = [];
+      const items = [];
       document.querySelectorAll('.object-item').forEach(item => {
-          objects.push({
+          items.push({
               name: item.querySelector('.obj-name').value,
-              desc: item.querySelector('.obj-desc').value
+              count: parseInt(item.querySelector('.obj-count').value) || 0
           });
       });
 
-      // Отправляем данные на Worker (он передаст боту)
-      const response = await fetch(`${API_URL}/api/send-accounting`, {
+      // 1. Отправляем данные на Worker (сохраняем в БД)
+      const saveResponse = await fetch(`${API_URL}/api/accounting`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          guildId: guildId,
+          name: name,
+          channelId: selectedPubChannel,
+          channelName: selectedPubChannelName,
+          items: items
+        })
+      });
+
+      if (!saveResponse.ok) throw new Error('Ошибка сохранения в БД');
+
+      // 2. Отправляем данные боту для отправки в Discord
+      const botResponse = await fetch(`${API_URL}/api/send-accounting`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           guildId: guildId,
           channelId: selectedPubChannel,
-          title: 'Отчет по контракту',
+          title: name,
           name: name,
-          objects: objects
+          objects: items
         })
       });
 
-      const result = await response.json();
-      
-      if (!result.success) {
-        throw new Error(result.error || 'Ошибка отправки в Discord');
-      }
+      const result = await botResponse.json();
+      if (!result.success) throw new Error(result.error || 'Бот не отвечает');
 
-      // Добавляем строку в таблицу
-      addAccountingRow(name, selectedPubChannel, selectedPubChannelName);
+      // 3. Добавляем строку в таблицу на сайте
+      addAccountingRow(name, selectedPubChannel, selectedPubChannelName, items);
       
-      // Закрываем и чистим
       modal.classList.remove('active');
-
     } catch (error) {
-      alert("Ошибка при публикации! Убедитесь, что бот запущен в VS Code.\n" + error.message);
+      alert("Ошибка при публикации: " + error.message);
     } finally {
       btnPublish.textContent = originalText;
       btnPublish.disabled = false;
@@ -183,7 +178,6 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 7. Проверяем, авторизован ли пользователь
   if (localStorage.getItem('discord_token')) {
     loadGuilds();
   } else {
@@ -191,21 +185,55 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
+// --- ФУНКЦИИ ДЛЯ РАБОТЫ С БАЗОЙ ---
 
-// Функция для создания новой строчки в таблице
-function addAccountingRow(name, channelId, channelName) {
+// Загрузка данных из базы при входе на экран
+async function loadAccountingData() {
+  const guildId = localStorage.getItem('currentGuildId');
+  if (!guildId) return;
+
+  try {
+    const response = await fetch(`${API_URL}/api/accounting?guild_id=${guildId}`);
+    const data = await response.json();
+    
+    // Очищаем таблицу
+    const container = document.getElementById('accounting-rows');
+    container.innerHTML = '';
+    
+    if (data.length === 0) {
+      container.innerHTML = 'У вас пока нет созданных учётов...';
+      container.style.padding = '40px'; container.style.textAlign = 'center';
+      document.querySelector('.badge').textContent = '0 опубликованных';
+      document.querySelector('.limit-text').textContent = '0/100 использовано';
+      return;
+    }
+
+    document.querySelector('.badge').textContent = `${data.length} опубликованных`;
+    document.querySelector('.limit-text').textContent = `${data.length}/100 использовано`;
+    container.style.padding = '0'; container.style.textAlign = 'left'; container.style.color = 'inherit';
+
+    data.forEach(item => {
+      addAccountingRow(item.name, item.channel_id, item.channel_name, item.items);
+    });
+  } catch (e) {
+    console.error('Ошибка загрузки:', e);
+  }
+}
+
+function addAccountingRow(name, channelId, channelName, items = []) {
   const container = document.getElementById('accounting-rows');
   
-  if (container.innerHTML.includes('У вас пока нет')) {
-    container.innerHTML = '';
-    container.style.padding = '0'; container.style.textAlign = 'left'; container.style.color = 'inherit';
-    document.querySelector('.badge').textContent = '1 опубликованных';
-    document.querySelector('.limit-text').textContent = '1/100 использовано';
-  }
-
   const now = new Date();
   const dateStr = now.toLocaleDateString('ru-RU') + ' в ' + now.toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
+
+  let itemsHtml = '';
+  if (items && items.length > 0) {
+    itemsHtml = '<div style="font-size:12px; color:#9aa0b0; margin-top:8px; line-height:1.4;">';
+    items.forEach((item, index) => {
+      itemsHtml += `<div>${index + 1}. ${item.name} - ${item.count} шт</div>`;
+    });
+    itemsHtml += '</div>';
+  }
 
   const row = document.createElement('div');
   row.className = 'table-row';
@@ -213,6 +241,7 @@ function addAccountingRow(name, channelId, channelName) {
     <div class="table-cell-main">
       <div class="accounting-name">${name}</div>
       <div class="accounting-channels"># ${channelName}</div>
+      ${itemsHtml}
     </div>
     <div class="table-cell-status">
       <span class="status-badge status-green">✓ Опубликован</span>
@@ -230,7 +259,6 @@ function addAccountingRow(name, channelId, channelName) {
     </div>
   `;
 
-  // Меню 3 точек
   const toggleBtn = row.querySelector('.btn-menu-toggle');
   const menu = row.querySelector('.action-menu');
   
@@ -240,7 +268,6 @@ function addAccountingRow(name, channelId, channelName) {
     menu.classList.toggle('active');
   };
 
-  // Удаление
   row.querySelector('.delete-btn').onclick = () => {
     row.remove();
     if (container.children.length === 0) {
@@ -251,7 +278,6 @@ function addAccountingRow(name, channelId, channelName) {
     }
   };
 
-  // Изменение
   row.querySelector('.edit-btn').onclick = () => {
     document.getElementById('modal-accounting').classList.add('active');
     document.getElementById('modal-title').textContent = 'Редактирование учёта';
@@ -261,12 +287,11 @@ function addAccountingRow(name, channelId, channelName) {
   container.appendChild(row);
 }
 
-// Закрываем меню при клике вне его
 document.addEventListener('click', () => {
   document.querySelectorAll('.action-menu').forEach(m => m.classList.remove('active'));
 });
 
-// Загрузка серверов
+// --- ОСТАЛЬНЫЕ ФУНКЦИИ (ЗАГРУЗКА СЕРВЕРОВ, КАНАЛОВ, РОЛЕЙ) ---
 async function loadGuilds() {
   const token = localStorage.getItem('discord_token');
   if (!token) { showScreen('screen-login'); return; }
@@ -285,14 +310,12 @@ async function loadGuilds() {
     allGuilds = await response.json();
     await renderGuilds(allGuilds); 
     showScreen('screen-servers');
-    
   } catch (error) {
     console.error('Ошибка:', error);
     showScreen('screen-login');
   }
 }
 
-// Отрисовка серверов
 async function renderGuilds(guilds) {
   const list = document.getElementById('servers-list');
   if(!list) return;
@@ -357,21 +380,10 @@ async function renderGuilds(guilds) {
   }
 }
 
-// ==========================================
-// ЛОГИКА КРАСИВЫХ СПИСКОВ (РОЛИ И КАНАЛЫ)
-// ==========================================
-
 async function openRoleSelect() {
   const dropdown = document.getElementById('roles-dropdown');
-  
-  // Закрываем другие открытые списки
   document.querySelectorAll('.dropdown-content').forEach(d => { if(d !== dropdown) d.style.display = 'none'; });
-
-  if (dropdown.style.display === 'block') {
-    dropdown.style.display = 'none';
-    return;
-  }
-
+  if (dropdown.style.display === 'block') { dropdown.style.display = 'none'; return; }
   dropdown.style.display = 'block';
   
   if (dropdown.innerHTML.includes('Загрузка')) {
@@ -388,7 +400,6 @@ async function openRoleSelect() {
       dropdown.appendChild(item);
     });
 
-    // Кнопка "Готово"
     const submitBtn = document.createElement('button');
     submitBtn.className = 'dropdown-submit-btn';
     submitBtn.textContent = 'Готово';
@@ -398,15 +409,8 @@ async function openRoleSelect() {
 }
 
 function toggleRole(id, name, checkbox) {
-  if (checkbox.checked) {
-    selectedRoles.push({ id, name });
-  } else {
-    selectedRoles = selectedRoles.filter(r => r.id !== id);
-  }
-  updateRolesDisplay();
-}
-
-function updateRolesDisplay() {
+  if (checkbox.checked) selectedRoles.push({ id, name });
+  else selectedRoles = selectedRoles.filter(r => r.id !== id);
   const box = document.getElementById('selected-roles');
   if (selectedRoles.length === 0) box.textContent = 'Выберите роли...';
   else box.textContent = selectedRoles.map(r => r.name).join(', ');
@@ -415,15 +419,8 @@ function updateRolesDisplay() {
 async function openChannelSelect(type) {
   const dropdownId = type === 'pub' ? 'pub-dropdown' : 'log-dropdown';
   const dropdown = document.getElementById(dropdownId);
-
-  // Закрываем другие открытые списки
   document.querySelectorAll('.dropdown-content').forEach(d => { if(d !== dropdown) d.style.display = 'none'; });
-
-  if (dropdown.style.display === 'block') {
-    dropdown.style.display = 'none';
-    return;
-  }
-
+  if (dropdown.style.display === 'block') { dropdown.style.display = 'none'; return; }
   dropdown.style.display = 'block';
 
   if (dropdown.innerHTML.includes('Загрузка')) {
@@ -440,7 +437,6 @@ async function openChannelSelect(type) {
       dropdown.appendChild(item);
     });
 
-    // Кнопка "Готово"
     const submitBtn = document.createElement('button');
     submitBtn.className = 'dropdown-submit-btn';
     submitBtn.textContent = 'Готово';
@@ -461,7 +457,6 @@ function selectChannel(type, id, name) {
   }
 }
 
-// Закрываем выпадающие списки при клике вне их
 document.addEventListener('click', (e) => {
   if (!e.target.closest('.custom-select-box') && !e.target.closest('.dropdown-content')) {
     document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none');
