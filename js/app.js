@@ -140,3 +140,25 @@ document.querySelectorAll('.module-card').forEach(card => {
 document.getElementById('back-to-settings')?.addEventListener('click', () => {
   showScreen('screen-settings');
 });
+
+// === ЛОГИКА МОДАЛЬНОГО ОКНА ===
+const modal = document.getElementById('modal-accounting');
+const btnOpenModal = document.getElementById('open-create-modal');
+const btnCloseModal = document.getElementById('close-modal');
+
+// Открыть окно
+btnOpenModal?.addEventListener('click', () => {
+  modal.classList.add('active');
+});
+
+// Закрыть окно
+btnCloseModal?.addEventListener('click', () => {
+  modal.classList.remove('active');
+});
+
+// Закрыть при клике на темный фон
+modal?.addEventListener('click', (e) => {
+  if (e.target === modal) {
+    modal.classList.remove('active');
+  }
+});
