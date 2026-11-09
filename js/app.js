@@ -1,13 +1,11 @@
 const API_URL = 'https://bot-menu-api.vadrgnuil.workers.dev';
 
-// 1. СРАЗУ ПРОВЕРЯЕМ ССЫЛКУ НА ТОКЕН (работает еще до полной загрузки)
+// 1. СРАЗУ ПРОВЕРЯЕМ ССЫЛКУ НА ТОКЕН
 const urlParams = new URLSearchParams(window.location.search);
 const urlToken = urlParams.get('token');
 
 if (urlToken) {
-  // Если токен пришел в ссылке - сохраняем его
   localStorage.setItem('discord_token', urlToken);
-  // Очищаем ссылку, чтобы токен не висел в адресной строке
   window.history.replaceState(null, '', window.location.pathname);
 }
 
@@ -21,6 +19,7 @@ function showScreen(id) {
   document.getElementById(id)?.classList.add('active');
 }
 
+// Загрузка серверов
 async function loadGuilds() {
   const token = localStorage.getItem('discord_token');
   
@@ -70,11 +69,11 @@ async function loadGuilds() {
         
         card.querySelector('button').addEventListener('click', () => {
           if (isAdmin) {
-            localStorage.setItem('currentGuildId', guild.id);
-            localStorage.setItem('currentGuildName', guild.name);
-            alert(`Переход к настройкам сервера: ${guild.name}`);
+            // Вызываем функцию перехода вместо алерта
+            openSettings(guild.id, guild.name);
           } else {
-            alert(`У вас нет прав на управление сервером "${guild.name}".`);
+            // Если нет прав, просто делаем кнопку неактивной визуально или меняем текст
+            alert(`У вас нет прав на управление сервером "${guild.name}".`); // Тут можно оставить для неправильных действий
           }
         });
 
@@ -86,6 +85,25 @@ async function loadGuilds() {
     showScreen('screen-login');
   }
 }
+
+// === ФУНКЦИЯ ПЕРЕХОДА НА 3-Й ЭКРАН ===
+function openSettings(guildId, guildName) {
+  // Сохраняем выбранный сервер
+  localStorage.setItem('currentGuildId', guildId);
+  localStorage.setItem('currentGuildName', guildName);
+  
+  // Меняем название на 3-м экране
+  const titleEl = document.getElementById('current-server-name');
+  if (titleEl) titleEl.textContent = guildName;
+
+  // Переключаем экран
+  showScreen('screen-settings');
+}
+
+// Кнопка "Назад" на 3-м экране
+document.getElementById('back-to-servers')?.addEventListener('click', () => {
+  showScreen('screen-servers');
+});
 
 // Запускаем при загрузке страницы
 window.onload = () => {
