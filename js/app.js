@@ -80,6 +80,48 @@ window.addEventListener('DOMContentLoaded', () => {
     objectsList.appendChild(objDiv);
   });
 
+  // 5.1. Кнопки Отмена / Сохранить / Опубликовать
+  const btnCancel = document.getElementById('btn-cancel');
+  const btnSave = document.getElementById('btn-save');
+  const btnPublish = document.getElementById('btn-publish');
+
+  btnCancel?.addEventListener('click', () => {
+    modal.classList.remove('active');
+  });
+
+  btnSave?.addEventListener('click', () => {
+    alert("Учёт сохранен как черновик! (Функционал в разработке)");
+    modal.classList.remove('active');
+  });
+
+  btnPublish?.addEventListener('click', async () => {
+    const name = document.getElementById('acc-name').value;
+    const channelPublic = document.getElementById('channel-public').value;
+    const channelLogs = document.getElementById('channel-logs').value;
+    
+    if (!name || !channelPublic || !channelLogs) {
+      alert("Пожалуйста, заполните все обязательные поля (Название, Каналы)!");
+      return;
+    }
+
+    const originalText = btnPublish.textContent;
+    btnPublish.textContent = "Публикация...";
+    btnPublish.disabled = true;
+    btnPublish.style.opacity = '0.7';
+
+    try {
+      await new Promise(r => setTimeout(r, 1000)); 
+      alert(`Учёт "${name}" успешно опубликован!`);
+      modal.classList.remove('active');
+    } catch (error) {
+      alert("Ошибка при публикации!");
+    } finally {
+      btnPublish.textContent = originalText;
+      btnPublish.disabled = false;
+      btnPublish.style.opacity = '1';
+    }
+  });
+
   // 6. Проверяем, авторизован ли пользователь
   if (localStorage.getItem('discord_token')) {
     loadGuilds();

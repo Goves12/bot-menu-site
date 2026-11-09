@@ -40,17 +40,12 @@
 <!-- ================= ЭКРАН 3: НАСТРОЙКИ СЕРВЕРА ================= -->
 <section id="screen-settings" class="screen">
   <div class="servers-wrap">
-    
     <div class="settings-header">
       <button id="back-to-servers" class="btn-back">← Назад</button>
       <h2 id="current-server-name" class="settings-title">Название сервера</h2>
     </div>
-
     <p class="subtitle">Выберите модуль для настройки</p>
-
     <div class="modules-grid">
-      
-      <!-- Заявки -->
       <div class="module-card">
         <div class="module-icon-wrap">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
@@ -59,8 +54,6 @@
         <p>Создавайте заявки в семью, во фракцию, на повышение или для любых других идей.</p>
         <button class="btn-module">Настроить</button>
       </div>
-
-      <!-- Контракты -->
       <div class="module-card">
         <div class="module-icon-wrap">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
@@ -69,8 +62,6 @@
         <p>Создавайте контракты с любыми условиями и настраивайте их стоимость по своему усмотрению.</p>
         <button class="btn-module">Настроить</button>
       </div>
-
-      <!-- Учёт -->
       <div class="module-card">
         <div class="module-icon-wrap">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
@@ -79,8 +70,6 @@
         <p>Управляйте любыми предметами, автомобилями или другими ресурсами сервера.</p>
         <button class="btn-module">Настроить</button>
       </div>
-
-      <!-- Сборы «Плюсы» -->
       <div class="module-card">
         <div class="module-icon-wrap">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
@@ -89,53 +78,38 @@
         <p>Удобный сбор людей на контракты и мероприятия: MCL, ВЗМ и другие.</p>
         <button class="btn-module">Настроить</button>
       </div>
-
     </div>
-
   </div>
 </section>
 
 <!-- ================= ЭКРАН 4: УЧЁТ (СКЛАД) ================= -->
 <section id="screen-accounting" class="screen">
   <div class="servers-wrap">
-    
-    <!-- Шапка -->
     <div class="settings-header">
       <button id="back-to-settings" class="btn-back">← Назад</button>
       <h2 class="settings-title">Учёт</h2>
     </div>
-
     <p class="subtitle">Управляйте предметами, автомобилями или другими ресурсами сервера.</p>
-
-    <!-- Кнопка создания -->
     <div class="accounting-action-bar">
       <button id="open-create-modal" class="btn-create">
         <span>Создать новый учёт</span>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
       </button>
     </div>
-
-    <!-- Список учетов -->
     <div class="accounting-list-wrap">
       <div class="accounting-list-header">
         <h3>Ваши Учёты <span class="badge">0 опубликованных</span></h3>
         <span class="limit-text">0/100 использовано</span>
       </div>
-      
       <div class="accounting-table">
         <div class="table-header">
-          <span>Учёт</span>
-          <span>Статус</span>
-          <span>Время</span>
-          <span></span>
+          <span>Учёт</span><span>Статус</span><span>Время</span><span></span>
         </div>
-        <!-- Сюда JS будет добавлять созданные учеты -->
         <div id="accounting-rows" style="text-align:center; padding: 40px; color: #9aa0b0;">
            У вас пока нет созданных учётов. Нажмите «Создать новый учёт», чтобы начать.
         </div>
       </div>
     </div>
-
   </div>
 </section>
 
@@ -146,18 +120,16 @@
       <button id="close-modal" class="btn-icon">←</button>
       <h3 id="modal-title">Новый учёт</h3>
       <div class="modal-actions">
-        <button class="btn-outline">Отмена</button>
-        <button class="btn-primary">Сохранить</button>
-        <button class="btn-primary" style="background:#5865f2;">Опубликовать</button>
+        <button id="btn-cancel" class="btn-outline" type="button">Отмена</button>
+        <button id="btn-save" class="btn-save" type="button">Сохранить</button>
+        <button id="btn-publish" class="btn-publish" type="button">Опубликовать</button>
       </div>
     </div>
-
     <div class="modal-body">
       <div class="form-group">
         <label>Название учёта на сайте *</label>
         <input type="text" id="acc-name" class="form-input" placeholder="Новый учёт" value="Новый учёт">
       </div>
-
       <div class="form-group">
         <label>Настройка ролей для модерации учёта *</label>
         <select id="roles-moderator" class="form-input" multiple style="height: 100px;">
@@ -165,38 +137,25 @@
         </select>
         <span style="font-size:12px; color:#9aa0b0; margin-top:4px;">Зажмите Ctrl, чтобы выбрать несколько.</span>
       </div>
-
       <div class="form-group">
         <label>Канал публикации *</label>
-        <select id="channel-public" class="form-input">
-          <option>Загрузка каналов...</option>
-        </select>
+        <select id="channel-public" class="form-input"><option>Загрузка каналов...</option></select>
       </div>
-
       <div class="form-group">
         <label>Канал логов *</label>
-        <select id="channel-logs" class="form-input">
-          <option>Загрузка каналов...</option>
-        </select>
+        <select id="channel-logs" class="form-input"><option>Загрузка каналов...</option></select>
       </div>
-
       <div class="form-group">
         <label>Текст заголовка *</label>
-        <input type="text" id="acc-title" class="form-input" placeholder="Напишите сообщение, которое будет в канале публикации" maxlength="250">
+        <input type="text" id="acc-title" class="form-input" placeholder="Напишите сообщение..." maxlength="250">
       </div>
-
-      <!-- БЛОК ОБЪЕКТОВ -->
       <div class="form-group border-top">
         <div class="flex-between">
           <label>Объекты учёта *</label>
           <button id="add-object-btn" class="btn-small" type="button">Добавить объект +</button>
         </div>
-        
-        <div id="objects-list" class="empty-state">
-           <p>Нет добавленных объектов</p>
-        </div>
+        <div id="objects-list" class="empty-state"><p>Нет добавленных объектов</p></div>
       </div>
-
       <div class="form-group border-top">
         <label>Лимиты</label>
         <p class="text-muted" style="font-size:12px; margin-bottom:8px;">Максимальное количество объектов на одного пользователя</p>

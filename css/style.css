@@ -24,7 +24,6 @@ body {
   position: relative;
 }
 
-/* Красивый фон */
 body::before, body::after {
   content: ''; position: absolute; width: 500px; height: 500px; border-radius: 50%;
   filter: blur(120px); z-index: -1; opacity: 0.5; animation: float 10s infinite alternate ease-in-out;
@@ -74,477 +73,117 @@ body::after { background: #eb459e; bottom: -100px; right: -100px; animation-dela
 .server-card {
   background: #1e222d; border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 16px; padding: 24px 20px; display: flex; flex-direction: column;
-  align-items: center; text-align: center; transition: transform 0.2s;
+  align-items: center; text-align: center; transition: all 0.3s ease;
+  position: relative; overflow: hidden;
 }
-.server-card:hover { transform: translateY(-4px); }
-.card-icon-wrap { width: 80px; height: 80px; border-radius: 50%; overflow: hidden; margin-bottom: 16px; }
-.card-icon-wrap img { width: 100%; height: 100%; object-fit: cover; }
-.server-card .name { font-weight: 600; margin-bottom: 20px; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-.btn-card { width: 100%; padding: 10px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
-.btn-dark { background: #36393f; color: #b9bbbe; }
-.btn-blue { background: #5865f2; color: #fff; }
-
-/* Экран настроек */
-.settings-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
-.btn-back { background: #2b2f3a; border: none; color: #fff; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
-.server-selector { background: #1e222d; padding: 6px 16px; border-radius: 10px; display: flex; align-items: center; gap: 10px; }
-.custom-select { background: transparent; border: none; color: #fff; font-weight: 600; font-size: 15px; outline: none; cursor: pointer; }
-.custom-select option { background: #1e222d; }
-
-.modules-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; margin-top: 32px; }
-.module-card { background: #1e222d; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 28px; display: flex; flex-direction: column; transition: transform 0.2s, border-color 0.2s; }
-.module-card:hover { transform: translateY(-5px); border-color: rgba(88, 101, 242, 0.4); }
-.module-icon { font-size: 36px; margin-bottom: 16px; }
-.module-card h3 { font-size: 18px; margin-bottom: 12px; }
-.module-card p { color: var(--text-muted); font-size: 14px; flex: 1; margin-bottom: 20px; line-height: 1.5; }
-.btn-module { background: #36393f; color: #b9bbbe; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.2s; }
-.module-card:hover .btn-module { background: var(--accent-color); color: #fff; }
-
-/* =========================================
-   ОБНОВЛЕННЫЕ СТИЛИ ДЛЯ 3-ГО ЭКРАНА (МОДУЛИ)
-   ========================================= */
-.modules-grid { 
-  display: grid; 
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); 
-  gap: 24px; 
-  margin-top: 32px; 
-}
-
-.module-card { 
-  background: #1e222d; 
-  border: 1px solid rgba(255, 255, 255, 0.05); 
-  border-radius: 16px; 
-  padding: 28px; 
-  display: flex; 
-  flex-direction: column; 
-  transition: all 0.3s ease; 
-  position: relative;
-  overflow: hidden;
-}
-
-.module-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 4px;
-  background: linear-gradient(90deg, #5865f2, #eb459e);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.module-card:hover { 
-  transform: translateY(-6px); 
-  border-color: rgba(88, 101, 242, 0.4); 
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
-}
-
-.module-card:hover::before {
-  opacity: 1;
-}
-
-.module-icon-wrap {
-  width: 56px;
-  height: 56px;
-  background: rgba(88, 101, 242, 0.1);
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 20px;
-  color: #a5b4fc;
-  transition: all 0.3s ease;
-}
-
-.module-card:hover .module-icon-wrap {
-  background: var(--accent-color);
-  color: #fff;
-  transform: scale(1.05);
-}
-
-.module-card h3 { 
-  font-size: 18px; 
-  font-weight: 700;
-  margin-bottom: 12px; 
-  color: #fff;
-}
-
-.module-card p { 
-  color: var(--text-muted); 
-  font-size: 14px; 
-  flex: 1; 
-  margin-bottom: 24px; 
-  line-height: 1.6; 
-}
-
-.btn-module { 
-  background: #36393f; 
-  color: #b9bbbe; 
-  border: none; 
-  padding: 12px; 
-  border-radius: 8px; 
-  cursor: pointer; 
-  font-weight: 600; 
-  transition: background 0.2s, color 0.2s; 
-  width: 100%;
-  font-family: inherit;
-}
-
-.module-card:hover .btn-module { 
-  background: var(--accent-color); 
-  color: #fff; 
-}
-
-/* =========================================
-   ОБНОВЛЕННЫЕ СТИЛИ ДЛЯ 2-ГО ЭКРАНА (СЕРВЕРА)
-   ========================================= */
-
-/* Сама карточка сервера */
-.server-card {
-  background: #1e222d;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
-  padding: 24px 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-/* Красивая полоска сверху при наведении */
 .server-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 4px;
-  background: linear-gradient(90deg, #5865f2, #eb459e);
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+  background: linear-gradient(90deg, #5865f2, #eb459e); opacity: 0; transition: opacity 0.3s ease;
 }
+.server-card:hover { transform: translateY(-6px); border-color: rgba(88, 101, 242, 0.4); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3); }
+.server-card:hover::before { opacity: 1; }
 
-.server-card:hover {
-  transform: translateY(-6px);
-  border-color: rgba(88, 101, 242, 0.4);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
-}
-
-.server-card:hover::before {
-  opacity: 1;
-}
-
-/* Иконка сервера (круглая, с тенью) */
 .card-icon-wrap {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  overflow: hidden;
-  margin-bottom: 16px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  width: 80px; height: 80px; border-radius: 50%; overflow: hidden; margin-bottom: 16px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4); border: 2px solid rgba(255, 255, 255, 0.1);
   transition: border-color 0.3s ease;
 }
+.server-card:hover .card-icon-wrap { border-color: var(--accent-color); }
+.card-icon-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.server-card .name { font-weight: 600; font-size: 15px; color: #fff; margin-bottom: 20px; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.server-card:hover .card-icon-wrap {
-  border-color: var(--accent-color);
+.btn-card { width: 100%; padding: 10px; border-radius: 8px; border: none; font-weight: 600; font-family: inherit; font-size: 14px; cursor: pointer; transition: background 0.2s, color 0.2s, transform 0.1s; }
+.btn-card:active { transform: scale(0.98); }
+.btn-dark { background: #36393f; color: #b9bbbe; }
+.server-card:hover .btn-dark { background: #40444b; color: #fff; }
+.btn-blue { background: var(--accent-color); color: #fff; }
+.btn-blue:hover { background: var(--accent-hover); }
+
+/* Экран настроек (Модули) */
+.settings-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
+.btn-back { background: #2b2f3a; border: none; color: #fff; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+.settings-title { font-size: 24px; font-weight: 800; }
+
+.modules-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; margin-top: 32px; }
+.module-card {
+  background: #1e222d; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px;
+  padding: 28px; display: flex; flex-direction: column; transition: all 0.3s ease;
+  position: relative; overflow: hidden;
 }
-
-.card-icon-wrap img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
+.module-card::before {
+  content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+  background: linear-gradient(90deg, #5865f2, #eb459e); opacity: 0; transition: opacity 0.3s ease;
 }
+.module-card:hover { transform: translateY(-6px); border-color: rgba(88, 101, 242, 0.4); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3); }
+.module-card:hover::before { opacity: 1; }
 
-/* Название сервера */
-.server-card .name {
-  font-weight: 600;
-  font-size: 15px;
-  color: #fff;
-  margin-bottom: 20px;
-  width: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.module-icon-wrap {
+  width: 56px; height: 56px; background: rgba(88, 101, 242, 0.1); border-radius: 14px;
+  display: flex; align-items: center; justify-content: center; margin-bottom: 20px;
+  color: #a5b4fc; transition: all 0.3s ease;
 }
+.module-card:hover .module-icon-wrap { background: var(--accent-color); color: #fff; transform: scale(1.05); }
+.module-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 12px; color: #fff; }
+.module-card p { color: var(--text-muted); font-size: 14px; flex: 1; margin-bottom: 24px; line-height: 1.6; }
+.btn-module { background: #36393f; color: #b9bbbe; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.2s, color 0.2s; width: 100%; font-family: inherit; }
+.module-card:hover .btn-module { background: var(--accent-color); color: #fff; }
 
-/* Кнопки "Настройка" и "Добавить" */
-.btn-card {
-  width: 100%;
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
-  font-weight: 600;
-  font-family: inherit;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s, transform 0.1s;
-}
-
-.btn-card:active {
-  transform: scale(0.98);
-}
-
-/* Темная кнопка (Настройка) */
-.btn-dark {
-  background: #36393f;
-  color: #b9bbbe;
-}
-
-.server-card:hover .btn-dark {
-  background: #40444b;
-  color: #fff;
-}
-
-/* Синяя кнопка (Добавить) */
-.btn-blue {
-  background: var(--accent-color);
-  color: #fff;
-}
-
-.btn-blue:hover {
-  background: var(--accent-hover);
-}
-
-/* =========================================
-   ЭКРАН УЧЁТА (СКЛАД)
-   ========================================= */
-.accounting-action-bar {
-  margin-bottom: 24px;
-}
-
+/* Экран Учёта */
+.accounting-action-bar { margin-bottom: 24px; }
 .btn-create {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  background: #1e222d;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  padding: 16px 20px;
-  color: #fff;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
+  display: flex; align-items: center; justify-content: space-between; width: 100%;
+  background: #1e222d; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px;
+  padding: 16px 20px; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s;
 }
 .btn-create:hover { background: #262b38; }
-
-.accounting-list-wrap {
-  background: #1e222d;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.accounting-list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.accounting-list-header h3 {
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.badge {
-  background: rgba(87, 242, 135, 0.1);
-  color: #57f287;
-  font-size: 12px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-weight: 600;
-}
-
-.limit-text {
-  color: #9aa0b0;
-  font-size: 13px;
-}
-
-/* Таблица */
-.accounting-table {
-  display: flex;
-  flex-direction: column;
-}
-
-.table-header {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 50px;
-  padding: 12px 20px;
-  font-size: 12px;
-  color: #9aa0b0;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.table-row {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 50px;
-  padding: 16px 20px;
-  align-items: center;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  transition: background 0.2s;
-}
+.accounting-list-wrap { background: #1e222d; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; overflow: hidden; }
+.accounting-list-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+.accounting-list-header h3 { font-size: 16px; display: flex; align-items: center; gap: 12px; }
+.badge { background: rgba(87, 242, 135, 0.1); color: #57f287; font-size: 12px; padding: 4px 8px; border-radius: 6px; font-weight: 600; }
+.limit-text { color: #9aa0b0; font-size: 13px; }
+.accounting-table { display: flex; flex-direction: column; }
+.table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 50px; padding: 12px 20px; font-size: 12px; color: #9aa0b0; text-transform: uppercase; letter-spacing: 0.5px; }
+.table-row { display: grid; grid-template-columns: 2fr 1fr 1fr 50px; padding: 16px 20px; align-items: center; border-top: 1px solid rgba(255, 255, 255, 0.05); transition: background 0.2s; }
 .table-row:hover { background: rgba(255, 255, 255, 0.02); }
 
-.table-cell-main .accounting-name {
-  font-weight: 600;
-  color: #fff;
-  margin-bottom: 4px;
-}
-
-.table-cell-main .accounting-channels {
-  font-size: 13px;
-  color: #9aa0b0;
-}
-
-.status-badge {
-  font-size: 12px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-weight: 600;
-}
-.status-green {
-  background: rgba(87, 242, 135, 0.1);
-  color: #57f287;
-}
-
-.table-cell-time {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: #9aa0b0;
-}
-
-.btn-icon {
-  background: transparent;
-  border: none;
-  color: #9aa0b0;
-  font-size: 20px;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-}
-.btn-icon:hover { color: #fff; background: rgba(255, 255, 255, 0.1); }
-
-/* =========================================
-   МОДАЛЬНОЕ ОКНО УЧЁТА
-   ========================================= */
+/* Модальное окно */
 .modal-overlay {
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  display: none; /* Скрыто по умолчанию */
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px);
+  display: none; align-items: center; justify-content: center; z-index: 1000;
 }
 .modal-overlay.active { display: flex; }
-
 .modal-content {
-  background: #0f1117;
-  width: 100%;
-  max-width: 800px;
-  max-height: 90vh;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  overflow: hidden;
+  background: #0f1117; width: 100%; max-width: 800px; max-height: 90vh; border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1); display: flex; flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); overflow: hidden;
 }
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  background: #0b0f19;
-}
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); background: #0b0f19; }
 .modal-header h3 { font-size: 18px; font-weight: 700; }
+.modal-body { padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
 
-.modal-actions { display: flex; gap: 10px; }
+/* Кнопки в модальном окне */
+.modal-actions { display: flex; gap: 12px; align-items: center; }
+.modal-actions button { padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.2s ease; border: none; display: flex; align-items: center; justify-content: center; }
+.btn-outline { background: transparent; color: #9aa0b0; border: 1px solid rgba(255, 255, 255, 0.1); }
+.btn-outline:hover { background: rgba(255, 255, 255, 0.05); color: #fff; border-color: rgba(255, 255, 255, 0.2); }
+.btn-save { background: #2b2f3a; color: #fff; }
+.btn-save:hover { background: #36393f; transform: translateY(-1px); }
+.btn-publish { background: #5865f2; color: #fff; box-shadow: 0 4px 12px rgba(88, 101, 242, 0.3); }
+.btn-publish:hover { background: #4752c4; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(88, 101, 242, 0.4); }
+.btn-publish:active { transform: translateY(0); box-shadow: 0 2px 8px rgba(88, 101, 242, 0.3); }
+.btn-small { background: rgba(88, 101, 242, 0.1); color: #5865f2; border: 1px solid rgba(88, 101, 242, 0.3); padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; font-family: inherit; }
+.btn-small:hover { background: #5865f2; color: #fff; }
 
-.btn-outline {
-  background: transparent; border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer;
-}
-.btn-small {
-  background: #5865f2; border: none; color: #fff;
-  padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px;
-}
-
-.modal-body {
-  padding: 24px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+/* Формы */
+.form-group { display: flex; flex-direction: column; gap: 8px; }
 .form-group label { font-size: 14px; font-weight: 600; color: #e3e5e8; }
-
-.form-input {
-  background: #1e222d;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-family: inherit;
-  font-size: 14px;
-  outline: none;
-}
+.form-input { background: #1e222d; border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; padding: 12px 16px; border-radius: 8px; font-family: inherit; font-size: 14px; outline: none; }
 .form-input:focus { border-color: #5865f2; }
-
-.btn-group { display: flex; gap: 10px; }
-.btn-tab {
-  background: #1e222d; border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #9aa0b0; padding: 8px 24px; border-radius: 8px; cursor: pointer;
-}
-.btn-tab.active {
-  background: #5865f2; color: #fff; border-color: #5865f2;
-}
-
-.input-with-icon {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-.input-with-icon span { position: absolute; left: 12px; color: #9aa0b0; }
-.input-with-icon .form-input { padding-left: 30px; width: 100%; }
-
 .flex-between { display: flex; justify-content: space-between; align-items: center; }
-
-.empty-state {
-  border: 1px dashed rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  padding: 40px;
-  text-align: center;
-  color: #9aa0b0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-.empty-state svg { opacity: 0.5; }
-
+.empty-state { border: 1px dashed rgba(255, 255, 255, 0.2); border-radius: 8px; padding: 40px; text-align: center; color: #9aa0b0; display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .border-top { border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 20px; }
+.object-item { display: flex; gap: 10px; margin-bottom: 10px; background: #1e222d; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
+.object-item input { flex: 1; }
+.btn-remove-obj { background: rgba(237, 66, 69, 0.1); color: #ed4245; border: none; border-radius: 6px; padding: 0 12px; cursor: pointer; }
+.btn-remove-obj:hover { background: rgba(237, 66, 69, 0.2); }
