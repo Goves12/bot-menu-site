@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bot Menu — Управление ботом</title>
+  <link rel="stylesheet" href="./css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- ================= ЭКРАН 1: ВХОД ================= -->
+<section id="screen-login" class="screen active">
+  <div class="login-card">
+    <div class="logo">🤖</div>
+    <h1>Bot Menu</h1>
+    <p class="subtitle">Войдите через Discord, чтобы управлять ботом</p>
+
+    <button id="discord-login" class="btn-discord">
+      <svg width="22" height="22" viewBox="0 0 71 55" fill="#fff">
+        <path d="M60.1 4.9A58.6 58.6 0 0 0 45.4.5a.2.2 0 0 0-.2.1 40.9 40.9 0 0 0-1.8 3.7 54.1 54.1 0 0 0-16.3 0A37.8 37.8 0 0 0 25.3.6a.2.2 0 0 0-.2-.1A58.4 58.4 0 0 0 10.4 4.9a.2.2 0 0 0-.1.1C.9 19 -1.1 32.6.6 46a.2.2 0 0 0 .1.1 58.9 58.9 0 0 0 17.7 9 .2.2 0 0 0 .3-.1 42 42 0 0 0 3.6-5.9.2.2 0 0 0-.1-.3 38.8 38.8 0 0 1-5.5-2.6.2.2 0 0 1 0-.3l1.1-.9a.2.2 0 0 1 .2 0 42 42 0 0 0 35.6 0 .2.2 0 0 1 .2 0l1.1.9a.2.2 0 0 1 0 .3 36.4 36.4 0 0 1-5.5 2.6.2.2 0 0 0-.1.3 47.2 47.2 0 0 0 3.6 5.9.2.2 0 0 0 .3.1 58.7 58.7 0 0 0 17.7-9 .2.2 0 0 0 .1-.1c2-15.2-1.1-28.7-9.5-40.9a.2.2 0 0 0-.1-.1ZM23.7 37.9c-3.5 0-6.4-3.2-6.4-7.1s2.8-7.1 6.4-7.1 6.5 3.2 6.4 7.1c0 3.9-2.8 7.1-6.4 7.1Zm23.7 0c-3.5 0-6.4-3.2-6.4-7.1s2.8-7.1 6.4-7.1 6.5 3.2 6.4 7.1c0 3.9-2.9 7.1-6.4 7.1Z"/>
+      </svg>
+      Войти через Discord
+    </button>
+
+    <p class="hint">Мы запросим доступ к списку ваших серверов</p>
+  </div>
+</section>
+
+<!-- Остальные экраны (2 и 3) можно добавить позже -->
+<script src="./js/app.js"></script>
+</body>
+</html>
