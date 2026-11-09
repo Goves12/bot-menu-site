@@ -187,3 +187,74 @@ body::after { background: #eb459e; bottom: -100px; right: -100px; animation-dela
 .object-item input { flex: 1; }
 .btn-remove-obj { background: rgba(237, 66, 69, 0.1); color: #ed4245; border: none; border-radius: 6px; padding: 0 12px; cursor: pointer; }
 .btn-remove-obj:hover { background: rgba(237, 66, 69, 0.2); }
+/* Красивые селекты */
+.custom-select-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1e222d;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  position: relative;
+}
+.custom-select-box:hover { border-color: #5865f2; }
+.selected-items { color: #fff; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90%; }
+.btn-plus {
+  background: rgba(88, 101, 242, 0.2);
+  color: #5865f2;
+  border: none;
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 18px; font-weight: bold;
+  display: flex; align-items: center; justify-content: center;
+}
+.btn-plus:hover { background: #5865f2; color: #fff; }
+
+/* Выпадающие списки */
+.dropdown-content {
+  position: absolute;
+  background: #1e222d;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 100;
+  margin-top: 4px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+.dropdown-item {
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.dropdown-item:hover { background: rgba(255,255,255,0.05); }
+.dropdown-item input { cursor: pointer; }
+
+/* Меню для 3 точек */
+.action-menu {
+  position: absolute;
+  right: 0; top: 30px;
+  background: #1e222d;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  display: none;
+  flex-direction: column;
+  min-width: 120px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  z-index: 10;
+}
+.action-menu.active { display: flex; }
+.action-menu button {
+  background: transparent; border: none; color: #fff;
+  padding: 10px 16px; text-align: left; cursor: pointer; font-size: 14px;
+}
+.action-menu button:hover { background: rgba(255,255,255,0.05); }
+.action-menu button.delete { color: #ed4245; }

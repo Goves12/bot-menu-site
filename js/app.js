@@ -104,11 +104,12 @@ window.addEventListener('DOMContentLoaded', () => {
     modal.classList.remove('active');
   });
 
-  // Опубликовать - добавляет в таблицу
+  // Опубликовать - отправляет данные боту
   btnPublish?.addEventListener('click', async () => {
     const name = document.getElementById('acc-name').value;
     const channelPublic = document.getElementById('channel-public').value;
     const channelLogs = document.getElementById('channel-logs').value;
+    const guildId = localStorage.getItem('currentGuildId');
     
     // Валидация
     if (!name || !channelPublic || !channelLogs) {
@@ -130,8 +131,34 @@ window.addEventListener('DOMContentLoaded', () => {
     btnPublish.style.opacity = '0.7';
 
     try {
-      await new Promise(r => setTimeout(r, 800)); 
+      // Собираем объекты
+      const objects = [];
+      document.querySelectorAll('.object-item').forEach(item => {
+          objects.push({
+              name: item.querySelector('.obj-name').value,
+              desc: item.querySelector('.obj-desc').value
+          });
+      });
+
+      // Отправляем данные на Worker, который передаст их боту
+      const response = await fetch(`${API_URL}/api/send-accounting`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          guildId: guildId,
+          channelId: channelPublic,
+          title: 'Отчет по контракту',
+          name: name,
+          objects: objects
+        })
+      });
+
+      const result = await response.json();
       
+      if (!result.success) {
+        throw new Error(result.error || 'Ошибка отправки в Discord');
+      }
+
       // Получаем название канала для таблицы
       const channelSelect = document.getElementById('channel-public');
       const channelName = channelSelect.options[channelSelect.selectedIndex].text.replace('# ', '');
@@ -147,7 +174,7 @@ window.addEventListener('DOMContentLoaded', () => {
       objectsList.classList.add('empty-state');
 
     } catch (error) {
-      console.error(error);
+      alert("Ошибка при публикации! Убедитесь, что бот запущен в VS Code.\n" + error.message);
     } finally {
       btnPublish.textContent = originalText;
       btnPublish.disabled = false;
@@ -204,14 +231,10 @@ function addAccountingRow(name, channelId, channelName) {
 
   // Логика кнопки "Изменить"
   row.querySelector('.btn-edit').onclick = () => {
-    // Открываем модальное окно
     document.getElementById('modal-accounting').classList.add('active');
     document.getElementById('modal-title').textContent = 'Редактирование учёта';
-    
-    // Заполняем поля
     document.getElementById('acc-name').value = name;
     
-    // Загружаем каналы и ставим нужный
     loadDiscordData().then(() => {
       const chSelect = document.getElementById('channel-public');
       if (chSelect) chSelect.value = channelId;
@@ -344,5 +367,77 @@ async function loadDiscordData() {
     }
   } catch (e) {
     console.error('Ошибка загрузки данных Discord:', e);
+  }
+}
+
+// ==========================================
+// ЛОГИКА КРАСИВЫХ СПИСКОВ (РОЛИ И КАНАЛЫ)
+// ==========================================
+
+let selectedRoles = []; // Храним выбранные ID ролей
+let selectedPubChannel = null;
+let selectedLogChannel = null;
+
+async function openRoleSelect() {
+  const dropdown = document.getElementById('roles-dropdown');
+  dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+  
+  if (dropdown.innerHTML.includes('Загрузка')) {
+    const guildId = localStorage.getItem('currentGuildId');
+    const res = await fetch(`${API_URL}/api/guild-roles?guild_id=${guildId}`);
+    const roles = await res.json();
+    
+    dropdown.innerHTML = '';
+    roles.forEach(r => {
+      const item = document.createElement('div');
+      item.className = 'dropdown-item';
+      item.innerHTML = `<input type="checkbox" value="${r.id}" onchange="toggleRole('${r.id}', '${r.name}', this)"> <span>${r.name}</span>`;
+      dropdown.appendChild(item);
+    });
+  }
+}
+
+function toggleRole(id, name, checkbox) {
+  if (checkbox.checked) {
+    selectedRoles.push({ id, name });
+  } else {
+    selectedRoles = selectedRoles.filter(r => r.id !== id);
+  }
+  updateRolesDisplay();
+}
+
+function updateRolesDisplay() {
+  const box = document.getElementById('selected-roles');
+  if (selectedRoles.length === 0) box.textContent = 'Выберите роли...';
+  else box.textContent = selectedRoles.map(r => r.name).join(', ');
+}
+
+async function openChannelSelect(type) {
+  const dropdownId = type === 'pub' ? 'pub-dropdown' : 'log-dropdown';
+  const dropdown = document.getElementById(dropdownId);
+  dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+
+  if (dropdown.innerHTML.includes('Загрузка')) {
+    const guildId = localStorage.getItem('currentGuildId');
+    const res = await fetch(`${API_URL}/api/guild-channels?guild_id=${guildId}`);
+    const channels = await res.json();
+
+    dropdown.innerHTML = '';
+    channels.forEach(c => {
+      const item = document.createElement('div');
+      item.className = 'dropdown-item';
+      item.innerHTML = `<input type="radio" name="${type}-channel" value="${c.id}" onchange="selectChannel('${type}', '${c.id}', '${c.name}')"> <span># ${c.name}</span>`;
+      dropdown.appendChild(item);
+    });
+  }
+}
+
+function selectChannel(type, id, name) {
+  if (type === 'pub') {
+    selectedPubChannel = id;
+    document.getElementById('selected-pub-channel').textContent = '# ' + name;
+  } else {
+    selectedLogChannel = id;
+    document.getElementById('selected-log-channel').textContent = '# ' + name;
   }
 }

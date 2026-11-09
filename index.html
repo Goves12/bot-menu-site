@@ -117,7 +117,6 @@
 <div id="modal-accounting" class="modal-overlay">
   <div class="modal-content">
     <div class="modal-header">
-      <!-- КРАСИВАЯ КНОПКА НАЗАД (SVG) -->
       <button id="close-modal" class="btn-icon" type="button" style="display:flex; align-items:center; justify-content:center; width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
       </button>
@@ -135,21 +134,43 @@
         <label>Название учёта на сайте *</label>
         <input type="text" id="acc-name" class="form-input" placeholder="Новый учёт" value="Новый учёт">
       </div>
+      
+      <!-- НОВЫЙ БЛОК РОЛЕЙ -->
       <div class="form-group">
         <label>Настройка ролей для модерации учёта *</label>
-        <select id="roles-moderator" class="form-input" multiple style="height: 100px;">
-           <option>Загрузка ролей...</option>
-        </select>
-        <span style="font-size:12px; color:#9aa0b0; margin-top:4px;">Зажмите Ctrl, чтобы выбрать несколько.</span>
+        <div class="custom-select-box" id="roles-box">
+          <div class="selected-items" id="selected-roles">Выберите роли...</div>
+          <button type="button" class="btn-plus" onclick="openRoleSelect()">+</button>
+        </div>
+        <div id="roles-dropdown" class="dropdown-content" style="display: none;">
+          <p style="padding: 10px; color: #9aa0b0; font-size: 12px;">Загрузка ролей...</p>
+        </div>
       </div>
+
+      <!-- НОВЫЙ БЛОК КАНАЛА ПУБЛИКАЦИИ -->
       <div class="form-group">
         <label>Канал публикации *</label>
-        <select id="channel-public" class="form-input"><option>Загрузка каналов...</option></select>
+        <div class="custom-select-box" id="pub-channel-box">
+          <div class="selected-items" id="selected-pub-channel">Выберите канал...</div>
+          <button type="button" class="btn-plus" onclick="openChannelSelect('pub')">+</button>
+        </div>
+        <div id="pub-dropdown" class="dropdown-content" style="display: none;">
+          <p style="padding: 10px; color: #9aa0b0; font-size: 12px;">Загрузка каналов...</p>
+        </div>
       </div>
+
+      <!-- НОВЫЙ БЛОК КАНАЛА ЛОГОВ -->
       <div class="form-group">
         <label>Канал логов *</label>
-        <select id="channel-logs" class="form-input"><option>Загрузка каналов...</option></select>
+        <div class="custom-select-box" id="log-channel-box">
+          <div class="selected-items" id="selected-log-channel">Выберите канал...</div>
+          <button type="button" class="btn-plus" onclick="openChannelSelect('log')">+</button>
+        </div>
+        <div id="log-dropdown" class="dropdown-content" style="display: none;">
+          <p style="padding: 10px; color: #9aa0b0; font-size: 12px;">Загрузка каналов...</p>
+        </div>
       </div>
+
       <div class="form-group">
         <label>Текст заголовка *</label>
         <input type="text" id="acc-title" class="form-input" placeholder="Напишите сообщение..." maxlength="250">
