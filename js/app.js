@@ -43,10 +43,19 @@ window.addEventListener('DOMContentLoaded', () => {
   const modal = document.getElementById('modal-accounting');
   const btnOpenModal = document.getElementById('open-create-modal');
   const btnCloseModal = document.getElementById('close-modal');
+  const modalTitle = document.getElementById('modal-title');
 
   btnOpenModal?.addEventListener('click', () => {
+    // Сбрасываем форму перед созданием нового
+    document.getElementById('acc-name').value = 'Новый учёт';
+    document.getElementById('acc-title').value = '';
+    document.getElementById('acc-name').style.borderColor = '';
+    document.getElementById('channel-public').style.borderColor = '';
+    document.getElementById('channel-logs').style.borderColor = '';
+    
+    modalTitle.textContent = 'Новый учёт';
     modal.classList.add('active');
-    loadDiscordData(); // Загружаем каналы и роли
+    loadDiscordData(); 
   });
 
   btnCloseModal?.addEventListener('click', () => modal.classList.remove('active'));
@@ -109,7 +118,7 @@ window.addEventListener('DOMContentLoaded', () => {
       return; 
     }
 
-    // Сброс красных рамок, если все ок
+    // Сброс красных рамок
     document.getElementById('acc-name').style.borderColor = '';
     document.getElementById('channel-public').style.borderColor = '';
     document.getElementById('channel-logs').style.borderColor = '';
@@ -123,10 +132,14 @@ window.addEventListener('DOMContentLoaded', () => {
     try {
       await new Promise(r => setTimeout(r, 800)); 
       
-      // Добавляем строку в таблицу
-      addAccountingRow(name, channelPublic);
+      // Получаем название канала для таблицы
+      const channelSelect = document.getElementById('channel-public');
+      const channelName = channelSelect.options[channelSelect.selectedIndex].text.replace('# ', '');
       
-      // Закрываем окно и чистим форму
+      // Добавляем строку
+      addAccountingRow(name, channelPublic, channelName);
+      
+      // Закрываем и чистим
       modal.classList.remove('active');
       document.getElementById('acc-name').value = 'Новый учёт';
       document.getElementById('acc-title').value = '';
@@ -153,7 +166,7 @@ window.addEventListener('DOMContentLoaded', () => {
 // --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
 
 // Функция для создания новой строчки в таблице
-function addAccountingRow(name, channelId) {
+function addAccountingRow(name, channelId, channelName) {
   const container = document.getElementById('accounting-rows');
   
   // Если это первый учёт, убираем заглушку
@@ -163,13 +176,9 @@ function addAccountingRow(name, channelId) {
     container.style.textAlign = 'left';
     container.style.color = 'inherit';
     
-    // Обновляем счетчик
     document.querySelector('.badge').textContent = '1 опубликованных';
     document.querySelector('.limit-text').textContent = '1/100 использовано';
   }
-
-  const channelSelect = document.getElementById('channel-public');
-  const channelName = channelSelect.options[channelSelect.selectedIndex].text;
 
   const now = new Date();
   const dateStr = now.toLocaleDateString('ru-RU') + ' в ' + now.toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
@@ -179,7 +188,7 @@ function addAccountingRow(name, channelId) {
   row.innerHTML = `
     <div class="table-cell-main">
       <div class="accounting-name">${name}</div>
-      <div class="accounting-channels">${channelName}</div>
+      <div class="accounting-channels"># ${channelName}</div>
     </div>
     <div class="table-cell-status">
       <span class="status-badge status-green">✓ Опубликован</span>
@@ -189,9 +198,25 @@ function addAccountingRow(name, channelId) {
       ${dateStr}
     </div>
     <div class="table-cell-actions">
-      <button class="btn-icon">⋮</button>
+      <button class="btn-icon btn-edit" title="Редактировать">⋮</button>
     </div>
   `;
+
+  // Логика кнопки "Изменить"
+  row.querySelector('.btn-edit').onclick = () => {
+    // Открываем модальное окно
+    document.getElementById('modal-accounting').classList.add('active');
+    document.getElementById('modal-title').textContent = 'Редактирование учёта';
+    
+    // Заполняем поля
+    document.getElementById('acc-name').value = name;
+    
+    // Загружаем каналы и ставим нужный
+    loadDiscordData().then(() => {
+      const chSelect = document.getElementById('channel-public');
+      if (chSelect) chSelect.value = channelId;
+    });
+  };
 
   container.appendChild(row);
 }

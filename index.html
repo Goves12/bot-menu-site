@@ -117,8 +117,13 @@
 <div id="modal-accounting" class="modal-overlay">
   <div class="modal-content">
     <div class="modal-header">
-      <button id="close-modal" class="btn-icon">←</button>
+      <!-- КРАСИВАЯ КНОПКА НАЗАД (SVG) -->
+      <button id="close-modal" class="btn-icon" type="button" style="display:flex; align-items:center; justify-content:center; width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      </button>
+      
       <h3 id="modal-title">Новый учёт</h3>
+      
       <div class="modal-actions">
         <button id="btn-cancel" class="btn-outline" type="button">Отмена</button>
         <button id="btn-save" class="btn-save" type="button">Сохранить</button>
