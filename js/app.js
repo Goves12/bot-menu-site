@@ -254,4 +254,102 @@ async function loadDiscordData() {
   } catch (e) {
     console.error('Ошибка загрузки данных Discord:', e);
   }
+  
 }
+  // Кнопка "Сохранить" (черновик)
+  btnSave?.addEventListener('click', () => {
+    // Просто закрываем окно (пока без добавления в таблицу)
+    modal.classList.remove('active');
+  });
+
+  // Кнопка "Опубликовать" (добавляет в таблицу)
+  btnPublish?.addEventListener('click', async () => {
+    const name = document.getElementById('acc-name').value;
+    const channelPublic = document.getElementById('channel-public').value;
+    const channelLogs = document.getElementById('channel-logs').value;
+    
+    // Проверка на заполненность
+    if (!name || !channelPublic || !channelLogs) {
+      // Вместо alert делаем красную рамку у пустых полей
+      if (!name) document.getElementById('acc-name').style.borderColor = '#ed4245';
+      if (!channelPublic) document.getElementById('channel-public').style.borderColor = '#ed4245';
+      if (!channelLogs) document.getElementById('channel-logs').style.borderColor = '#ed4245';
+      return; 
+    }
+
+    // Красивая имитация загрузки
+    const originalText = btnPublish.textContent;
+    btnPublish.textContent = "Публикация...";
+    btnPublish.disabled = true;
+    btnPublish.style.opacity = '0.7';
+
+    try {
+      await new Promise(r => setTimeout(r, 800)); 
+      
+      // 1. Добавляем строку в таблицу
+      addAccountingRow(name, channelPublic);
+      
+      // 2. Закрываем модальное окно
+      modal.classList.remove('active');
+      
+      // 3. Очищаем форму для следующего раза
+      document.getElementById('acc-name').value = 'Новый учёт';
+      document.getElementById('acc-title').value = '';
+      objectsList.innerHTML = '<p>Нет добавленных объектов</p>';
+      objectsList.classList.add('empty-state');
+
+    } catch (error) {
+      console.error(error);
+    } finally {
+      btnPublish.textContent = originalText;
+      btnPublish.disabled = false;
+      btnPublish.style.opacity = '1';
+    }
+  });
+
+  // Функция для создания новой строчки в таблице
+  function addAccountingRow(name, channelId) {
+    const container = document.getElementById('accounting-rows');
+    
+    // Если это первый учёт, убираем надпись "У вас пока нет..."
+    if (container.innerHTML.includes('У вас пока нет')) {
+      container.innerHTML = '';
+      container.style.padding = '0';
+      container.style.textAlign = 'left';
+      container.style.color = 'inherit';
+      
+      // Обновляем счетчик
+      document.querySelector('.badge').textContent = '1 опубликованных';
+      document.querySelector('.limit-text').textContent = '1/100 использовано';
+    }
+
+    // Получаем название канала (ищем в селекте)
+    const channelSelect = document.getElementById('channel-public');
+    const channelName = channelSelect.options[channelSelect.selectedIndex].text;
+
+    // Текущая дата
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('ru-RU') + ' в ' + now.toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
+
+    // Создаем HTML строки
+    const row = document.createElement('div');
+    row.className = 'table-row';
+    row.innerHTML = `
+      <div class="table-cell-main">
+        <div class="accounting-name">${name}</div>
+        <div class="accounting-channels">${channelName}</div>
+      </div>
+      <div class="table-cell-status">
+        <span class="status-badge status-green">✓ Опубликован</span>
+      </div>
+      <div class="table-cell-time">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        ${dateStr}
+      </div>
+      <div class="table-cell-actions">
+        <button class="btn-icon">⋮</button>
+      </div>
+    `;
+
+    container.appendChild(row);
+  }
