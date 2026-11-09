@@ -113,7 +113,7 @@ window.addEventListener('DOMContentLoaded', () => {
     
     if (!name || !selectedPubChannel) {
       if (!name) document.getElementById('acc-name').style.borderColor = '#ed4245';
-      if (!selectedPubChannel) alert("Пожалуйста, выберите канал публикации!");
+      if (!selectedPubChannel) showToast("Пожалуйста, выберите канал публикации!", "error");
       return; 
     }
 
@@ -142,19 +142,21 @@ window.addEventListener('DOMContentLoaded', () => {
           name: name,
           channelId: selectedPubChannel,
           channelName: selectedPubChannelName,
+          channelLogsId: selectedLogChannel, // 👈 ДОБАВИЛИ ПЕРЕДАЧУ ID ЛОГОВ
           items: items
         })
       });
 
       if (!saveResponse.ok) throw new Error('Ошибка сохранения в БД');
 
-      // 2. Отправляем боту
+      // 2. Отправляем боту (вместе с ID канала логов)
       const botResponse = await fetch(`${API_URL}/api/send-accounting`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           guildId: guildId,
           channelId: selectedPubChannel,
+          channelLogsId: selectedLogChannel, // 👈 ПЕРЕДАЕМ БОТУ
           title: name,
           name: name,
           objects: items
@@ -168,8 +170,9 @@ window.addEventListener('DOMContentLoaded', () => {
       loadAccountingData();
       
       modal.classList.remove('active');
+      showToast("Учёт успешно создан!", "success");
     } catch (error) {
-      alert("Ошибка при публикации: " + error.message);
+      showToast("Ошибка при публикации: " + error.message, "error");
     } finally {
       btnPublish.textContent = originalText;
       btnPublish.disabled = false;
@@ -270,16 +273,15 @@ function addAccountingRow(id, name, channelId, channelName, items = []) {
     if (!confirm('Вы уверены, что хотите удалить этот учёт?')) return;
 
     try {
-      // Отправляем запрос на удаление в базу
       const response = await fetch(`${API_URL}/api/accounting/${id}`, {
         method: 'DELETE'
       });
 
       if (!response.ok) throw new Error('Ошибка удаления');
 
-      // Удаляем строку из таблицы
       row.remove();
-      
+      showToast("Учёт успешно удалён!", "success");
+
       if (container.children.length === 0) {
         container.innerHTML = 'У вас пока нет созданных учётов...';
         container.style.padding = '40px'; container.style.textAlign = 'center';
@@ -287,7 +289,7 @@ function addAccountingRow(id, name, channelId, channelName, items = []) {
         document.querySelector('.limit-text').textContent = '0/100 использовано';
       }
     } catch (e) {
-      alert('Не удалось удалить: ' + e.message);
+      showToast('Не удалось удалить: ' + e.message, 'error');
     }
   };
 
@@ -313,10 +315,16 @@ async function openEditModal(id) {
     // Заполняем поля
     document.getElementById('acc-name').value = data.name;
     
-    // Устанавливаем канал
+    // Устанавливаем канал публикации
     selectedPubChannel = data.channel_id;
     selectedPubChannelName = data.channel_name;
     document.getElementById('selected-pub-channel').textContent = '# ' + data.channel_name;
+
+    // Устанавливаем канал логов (если он был сохранен)
+    if (data.channel_logs_id) {
+      selectedLogChannel = data.channel_logs_id;
+      document.getElementById('selected-log-channel').textContent = '# ' + (data.channel_logs_id ? 'Канал логов' : '');
+    }
 
     // Заполняем предметы
     const objectsList = document.getElementById('objects-list');
@@ -347,7 +355,7 @@ async function openEditModal(id) {
     }
 
   } catch (e) {
-    alert('Ошибка загрузки: ' + e.message);
+    showToast('Ошибка загрузки: ' + e.message, 'error');
   }
 }
 
@@ -355,7 +363,7 @@ document.addEventListener('click', () => {
   document.querySelectorAll('.action-menu').forEach(m => m.classList.remove('active'));
 });
 
-// --- ОСТАЛЬНЫЕ ФУНКЦИИ (БЕЗ ИЗМЕНЕНИЙ) ---
+// --- ОСТАЛЬНЫЕ ФУНКЦИИ ---
 async function loadGuilds() {
   const token = localStorage.getItem('discord_token');
   if (!token) { showScreen('screen-login'); return; }
