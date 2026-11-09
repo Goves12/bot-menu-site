@@ -1,14 +1,17 @@
 const API_URL = 'https://bot-menu-api.vadrgnuil.workers.dev';
 
+// Кнопка входа
 document.getElementById('discord-login')?.addEventListener('click', () => {
   window.location.href = `${API_URL}/api/auth/login`;
 });
 
+// Функция смены экранов
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id)?.classList.add('active');
 }
 
+// Загрузка серверов
 async function loadGuilds() {
   const token = localStorage.getItem('discord_token');
   
@@ -23,6 +26,7 @@ async function loadGuilds() {
     });
     
     if (!response.ok) {
+      // Если токен не подошел — удаляем его и просим войти заново
       localStorage.removeItem('discord_token');
       showScreen('screen-login'); 
       return;
@@ -61,6 +65,7 @@ async function loadGuilds() {
             localStorage.setItem('currentGuildId', guild.id);
             localStorage.setItem('currentGuildName', guild.name);
             alert(`Переход к настройкам сервера: ${guild.name}`);
+            // Здесь в будущем будет showScreen('screen-settings');
           } else {
             alert(`У вас нет прав на управление сервером "${guild.name}".`);
           }
@@ -70,25 +75,21 @@ async function loadGuilds() {
       });
     }
   } catch (error) {
-    console.error('Ошибка:', error);
+    console.error('Ошибка загрузки серверов:', error);
     showScreen('screen-login');
   }
 }
 
-// === САМОЕ ВАЖНОЕ: ЛОВИМ ТОКЕН ПРИ ЗАГРУЗКЕ ===
+// === ЛОВИМ ТОКЕН ИЗ АДРЕСНОЙ СТРОКИ ===
 window.onload = () => {
-  // Смотрим, есть ли в адресе #token=...
-  const hash = window.location.hash;
+  // Ищем токен в обычной ссылке (например, ?token=12345)
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlToken = urlParams.get('token');
   
-  if (hash && hash.includes('token=')) {
-    // Вытаскиваем токен
-    const token = hash.split('token=')[1];
-    if (token) {
-      // Сохраняем в память браузера
-      localStorage.setItem('discord_token', token);
-      // Очищаем адресную строку, чтобы токен не висел на виду
-      window.history.replaceState(null, '', window.location.pathname);
-    }
+  if (urlToken) {
+    // Сохраняем в память и убираем из ссылки
+    localStorage.setItem('discord_token', urlToken);
+    window.history.replaceState(null, '', window.location.pathname);
   }
 
   // Проверяем, есть ли токен в памяти
