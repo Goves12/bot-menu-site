@@ -36,7 +36,7 @@ async function loadGuilds() {
     }
 
     allGuilds = await response.json();
-    await renderGuilds(allGuilds); // Добавили await, так как теперь функция асинхронная
+    await renderGuilds(allGuilds); 
     showScreen('screen-servers');
     
   } catch (error) {
@@ -45,7 +45,6 @@ async function loadGuilds() {
   }
 }
 
-// Функция стала асинхронной (async), чтобы проверять бота на каждом сервере
 async function renderGuilds(guilds) {
   const list = document.getElementById('servers-list');
   list.innerHTML = '';
@@ -62,7 +61,6 @@ async function renderGuilds(guilds) {
     
     const isAdmin = (BigInt(guild.permissions || 0) & 8n) === 8n || (BigInt(guild.permissions || 0) & 32n) === 32n;
 
-    // Показываем карточку сразу, кнопка будет "Проверка..."
     card.innerHTML = `
       <div class="card-icon-wrap"><img src="${icon}"></div>
       <div class="name">${guild.name}</div>
@@ -74,12 +72,10 @@ async function renderGuilds(guilds) {
 
     if (isAdmin) {
       try {
-        // Спрашиваем у нашего сервера, есть ли бот на этом сервере
         const checkRes = await fetch(`${API_URL}/api/check-bot?guild_id=${guild.id}`);
         const checkData = await checkRes.json();
 
         if (checkData.onServer) {
-          // Бот есть - показываем "Настройка"
           btn.textContent = 'Настройка';
           btn.disabled = false;
           btn.className = 'btn-card btn-dark';
@@ -90,24 +86,25 @@ async function renderGuilds(guilds) {
             showScreen('screen-settings');
           };
         } else {
-          // Бота нет - показываем "Добавить бота"
           btn.textContent = 'Добавить бота';
           btn.disabled = false;
           btn.className = 'btn-card btn-blue';
           btn.onclick = () => {
-            // ⚠️ ЗАМЕНИ ТВОЙ_CLIENT_ID НА СВОЙ ID ПРИЛОЖЕНИЯ!
-            const inviteUrl = `https://discord.com/oauth2/authorize?client_id=1502787223249223740&scope=bot%20applications.commands&permissions=8&guild_id=${guild.id}`;
+            // ✅ ДОБАВЛЕНА ЛОГИКА ВОЗВРАТА НА САЙТ
+            const redirectUri = encodeURIComponent(`${API_URL}/api/auth/invite-callback`);
+            
+            // Твой Client ID
+            const inviteUrl = `https://discord.com/oauth2/authorize?client_id=1502787223249223740&scope=bot%20applications.commands&permissions=8&guild_id=${guild.id}&redirect_uri=${redirectUri}&response_type=code`;
+            
             window.open(inviteUrl, '_blank');
           };
         }
       } catch (e) {
-        // Если ошибка сети - даем кнопку "Добавить"
         btn.textContent = 'Добавить бота';
         btn.disabled = false;
         btn.className = 'btn-card btn-blue';
       }
     } else {
-      // Если нет прав админа
       btn.textContent = 'Нет прав';
       btn.disabled = true;
       btn.className = 'btn-card btn-dark';
