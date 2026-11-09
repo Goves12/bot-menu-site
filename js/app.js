@@ -1,15 +1,16 @@
 const API_URL = 'https://bot-menu-api.vadrgnuil.workers.dev';
 
-// 1. СРАЗУ ПРОВЕРЯЕМ ССЫЛКУ НА ТОКЕН
+// Проверка токена из ссылки
 const urlParams = new URLSearchParams(window.location.search);
 const urlToken = urlParams.get('token');
-
 if (urlToken) {
   localStorage.setItem('discord_token', urlToken);
   window.history.replaceState(null, '', window.location.pathname);
 }
 
-// Кнопка входа
+// Глобальное состояние
+let allGuilds = [];
+
 document.getElementById('discord-login')?.addEventListener('click', () => {
   window.location.href = `${API_URL}/api/auth/login`;
 });
@@ -22,7 +23,6 @@ function showScreen(id) {
 // Загрузка серверов
 async function loadGuilds() {
   const token = localStorage.getItem('discord_token');
-  
   if (!token) {
     showScreen('screen-login');
     return;
@@ -39,46 +39,20 @@ async function loadGuilds() {
       return;
     }
 
-    const guilds = await response.json();
-    const list = document.getElementById('servers-list');
-    list.innerHTML = '';
-
-    if (guilds.length === 0) {
-      list.innerHTML = `<p style="grid-column: 1 / -1; text-align: center; color: #ed4245;">У вас нет серверов с правами администратора.</p>`;
+    allGuilds = await response.json();
+    renderGuilds(allGuilds);
+    
+    // Если мы были на экране настроек, возвращаем туда
+    if (localStorage.getItem('currentGuildId')) {
+      const savedGuildId = localStorage.getItem('currentGuildId');
+      const guild = allGuilds.find(g => g.id === savedGuildId);
+      if (guild) {
+        openSettings(guild.id, guild.name, false); // false = не переключать экран
+      } else {
+        showScreen('screen-servers');
+      }
     } else {
-      guilds.forEach(guild => {
-        const card = document.createElement('div');
-        card.className = 'server-card';
-        
-        const iconUrl = guild.icon 
-          ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`
-          : `https://cdn.discordapp.com/embed/avatars/0.png`;
-
-        const permissions = BigInt(guild.permissions || 0);
-        const isAdmin = (permissions & 8n) === 8n || (permissions & 32n) === 32n;
-
-        card.innerHTML = `
-          <div class="card-icon-wrap">
-             <img src="${iconUrl}" alt="${guild.name}">
-          </div>
-          <div class="name">${guild.name}</div>
-          <button class="btn-card ${isAdmin ? 'btn-dark' : 'btn-blue'}">
-            ${isAdmin ? 'Настройка' : 'Добавить'}
-          </button>
-        `;
-        
-        card.querySelector('button').addEventListener('click', () => {
-          if (isAdmin) {
-            // Вызываем функцию перехода вместо алерта
-            openSettings(guild.id, guild.name);
-          } else {
-            // Если нет прав, просто делаем кнопку неактивной визуально или меняем текст
-            alert(`У вас нет прав на управление сервером "${guild.name}".`); // Тут можно оставить для неправильных действий
-          }
-        });
-
-        list.appendChild(card);
-      });
+      showScreen('screen-servers');
     }
   } catch (error) {
     console.error('Ошибка загрузки серверов:', error);
@@ -86,30 +60,89 @@ async function loadGuilds() {
   }
 }
 
-// === ФУНКЦИЯ ПЕРЕХОДА НА 3-Й ЭКРАН ===
-function openSettings(guildId, guildName) {
-  // Сохраняем выбранный сервер
+// Отрисовка карточек
+function renderGuilds(guilds) {
+  const list = document.getElementById('servers-list');
+  list.innerHTML = '';
+
+  if (guilds.length === 0) {
+    list.innerHTML = `<p style="grid-column: 1 / -1; text-align: center; color: #ed4245;">У вас нет серверов с правами администратора.</p>`;
+    return;
+  }
+
+  guilds.forEach(guild => {
+    const card = document.createElement('div');
+    card.className = 'server-card';
+    
+    const iconUrl = guild.icon 
+      ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`
+      : `https://cdn.discordapp.com/embed/avatars/0.png`;
+
+    const permissions = BigInt(guild.permissions || 0);
+    const isAdmin = (permissions & 8n) === 8n || (permissions & 32n) === 32n;
+
+    card.innerHTML = `
+      <div class="card-icon-wrap">
+         <img src="${iconUrl}" alt="${guild.name}">
+      </div>
+      <div class="name">${guild.name}</div>
+      <button class="btn-card ${isAdmin ? 'btn-dark' : 'btn-blue'}">
+        ${isAdmin ? 'Настройка' : 'Добавить'}
+      </button>
+    `;
+    
+    card.querySelector('button').addEventListener('click', () => {
+      if (isAdmin) {
+        openSettings(guild.id, guild.name, true);
+      } else {
+        alert(`У вас нет прав на управление сервером "${guild.name}".`);
+      }
+    });
+
+    list.appendChild(card);
+  });
+}
+
+// === ПЕРЕХОД НА 3-Й ЭКРАН ===
+function openSettings(guildId, guildName, changeScreen = true) {
   localStorage.setItem('currentGuildId', guildId);
   localStorage.setItem('currentGuildName', guildName);
   
-  // Меняем название на 3-м экране
-  const titleEl = document.getElementById('current-server-name');
-  if (titleEl) titleEl.textContent = guildName;
+  document.getElementById('current-server-name').textContent = guildName;
+  
+  // Заполняем выпадающий список серверов
+  const select = document.getElementById('server-select');
+  select.innerHTML = '';
+  allGuilds.forEach(g => {
+    const option = document.createElement('option');
+    option.value = g.id;
+    option.textContent = g.name;
+    if (g.id === guildId) option.selected = true;
+    select.appendChild(option);
+  });
 
-  // Переключаем экран
-  showScreen('screen-settings');
+  if (changeScreen) showScreen('screen-settings');
 }
 
 // Кнопка "Назад" на 3-м экране
 document.getElementById('back-to-servers')?.addEventListener('click', () => {
+  localStorage.removeItem('currentGuildId');
+  localStorage.removeItem('currentGuildName');
   showScreen('screen-servers');
 });
 
-// Запускаем при загрузке страницы
+// Переключение сервера через выпадающий список на 3-м экране
+document.getElementById('server-select')?.addEventListener('change', (e) => {
+  const newId = e.target.value;
+  const guild = allGuilds.find(g => g.id === newId);
+  if (guild) {
+    openSettings(guild.id, guild.name, false);
+  }
+});
+
+// Запуск
 window.onload = () => {
-  const token = localStorage.getItem('discord_token');
-  if (token) {
-    showScreen('screen-servers');
+  if (localStorage.getItem('discord_token')) {
     loadGuilds();
   } else {
     showScreen('screen-login');
