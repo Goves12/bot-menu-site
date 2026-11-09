@@ -162,3 +162,54 @@ modal?.addEventListener('click', (e) => {
     modal.classList.remove('active');
   }
 });
+
+// === ЛОГИКА МОДАЛЬНОГО ОКНА УЧЁТА ===
+const modal = document.getElementById('modal-accounting');
+const btnOpenModal = document.getElementById('open-create-modal');
+const btnCloseModal = document.getElementById('close-modal');
+
+async function loadDiscordData() {
+  const guildId = localStorage.getItem('currentGuildId');
+  if (!guildId) return;
+
+  try {
+    // Загружаем каналы
+    const chRes = await fetch(`${API_URL}/api/guild-channels?guild_id=${guildId}`);
+    const channels = await chRes.json();
+    const chSelect = document.getElementById('channel-public');
+    const logSelect = document.getElementById('channel-logs');
+
+    if(chSelect && logSelect) {
+      chSelect.innerHTML = '<option value="">Выберите канал...</option>';
+      logSelect.innerHTML = '<option value="">Выберите канал...</option>';
+      channels.forEach(c => {
+        chSelect.innerHTML += `<option value="${c.id}"># ${c.name}</option>`;
+        logSelect.innerHTML += `<option value="${c.id}"># ${c.name}</option>`;
+      });
+    }
+
+    // Загружаем роли
+    const roleRes = await fetch(`${API_URL}/api/guild-roles?guild_id=${guildId}`);
+    const roles = await roleRes.json();
+    const rolesSelect = document.getElementById('roles-moderator');
+    
+    if (rolesSelect) {
+       // Для простоты сделаем мультиселект
+       rolesSelect.innerHTML = '<option value="">Выберите роли...</option>';
+       roles.forEach(r => {
+         rolesSelect.innerHTML += `<option value="${r.id}">${r.name}</option>`;
+       });
+    }
+  } catch (e) {
+    console.error('Ошибка загрузки данных Discord:', e);
+  }
+}
+
+btnOpenModal?.addEventListener('click', () => {
+  modal.classList.add('active');
+  loadDiscordData(); // Загружаем каналы и роли при открытии
+});
+
+btnCloseModal?.addEventListener('click', () => {
+  modal.classList.remove('active');
+});
