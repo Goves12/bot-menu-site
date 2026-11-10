@@ -250,7 +250,7 @@
     <!-- Тело окна (с вкладками) -->
     <div class="modal-body" style="padding: 0; gap: 0;">
       
-      <!-- Вкладки (пока просто визуально, без логики переключения для простоты) -->
+      <!-- Вкладки -->
       <div style="display: flex; gap: 20px; padding: 20px 24px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
          <div style="padding-bottom: 10px; border-bottom: 2px solid #5865f2; color: #fff; font-weight: 600; cursor: pointer;">Основное</div>
          <div style="padding-bottom: 10px; color: #9aa0b0; font-weight: 600; cursor: pointer;">Сообщение</div>
@@ -281,7 +281,7 @@
             <label>Настройка ролей для рассмотрения заявок *</label>
             <div class="custom-select-box" id="app-roles-box">
               <div class="selected-items" id="app-selected-roles">Выберите роли...</div>
-              <button type="button" class="btn-plus" onclick="openRoleSelect('app')">+</button>
+              <button type="button" class="btn-plus" onclick="openAppRoleSelect()">+</button>
             </div>
             <div id="app-roles-dropdown" class="dropdown-content" style="display: none;">
                <p style="padding: 10px; color: #9aa0b0; font-size: 12px;">Загрузка ролей...</p>
@@ -298,7 +298,7 @@
             <label>Канал публикации *</label>
             <div class="custom-select-box" id="app-pub-box">
               <div class="selected-items" id="app-selected-pub">Выберите канал...</div>
-              <button type="button" class="btn-plus" onclick="openChannelSelect('app-pub')">+</button>
+              <button type="button" class="btn-plus" onclick="openAppChannelSelect('pub')">+</button>
             </div>
             <div id="app-pub-dropdown" class="dropdown-content" style="display: none;">
                <p style="padding: 10px; color: #9aa0b0; font-size: 12px;">Загрузка каналов...</p>
@@ -309,7 +309,7 @@
             <label>Канал логов *</label>
             <div class="custom-select-box" id="app-log-box">
               <div class="selected-items" id="app-selected-log">Выберите канал...</div>
-              <button type="button" class="btn-plus" onclick="openChannelSelect('app-log')">+</button>
+              <button type="button" class="btn-plus" onclick="openAppChannelSelect('log')">+</button>
             </div>
             <div id="app-log-dropdown" class="dropdown-content" style="display: none;">
                <p style="padding: 10px; color: #9aa0b0; font-size: 12px;">Загрузка каналов...</p>
@@ -320,7 +320,7 @@
             <label>Категория заявок *</label>
             <div class="custom-select-box" id="app-category-box">
               <div class="selected-items" id="app-selected-category">Выберите категорию...</div>
-              <button type="button" class="btn-plus" onclick="openChannelSelect('app-cat')">+</button>
+              <button type="button" class="btn-plus" onclick="openAppChannelSelect('cat')">+</button>
             </div>
             <div id="app-cat-dropdown" class="dropdown-content" style="display: none;">
                <p style="padding: 10px; color: #9aa0b0; font-size: 12px;">Загрузка категорий...</p>
