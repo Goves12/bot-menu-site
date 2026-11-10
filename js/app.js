@@ -228,18 +228,16 @@ window.addEventListener('DOMContentLoaded', () => {
     if (list.innerText.includes('Нет добавленных вопросов')) list.innerHTML = '';
 
     const fieldDiv = document.createElement('div');
-    fieldDiv.style.cssText = 'background: #1e222d; border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 15px; position: relative;';
+    fieldDiv.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: center; background: #1e222d; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);';
     
     fieldDiv.innerHTML = `
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <input type="text" class="form-input app-field-title" placeholder="Вопрос (например: Ваш ник в игре)" style="border: none; background: transparent; font-weight: 600; width: 80%; padding: 0;">
-        <button class="btn-icon delete-app-field" style="color: #ed4245; background: rgba(237, 66, 69, 0.1); border-radius: 6px; padding: 4px 8px;">✕</button>
+      <input type="text" class="form-input app-field-title" placeholder="Вопрос (например: Ваш ник)" style="flex: 2; margin: 0; padding: 8px 12px; font-size: 13px;">
+      <div style="display: flex; gap: 5px;">
+        <button class="btn-tab active app-field-type" data-type="short" style="background: #5865f2; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 11px;">Кор.</button>
+        <button class="btn-tab app-field-type" data-type="long" style="background: #36393f; color: #b9bbbe; padding: 4px 8px; border-radius: 4px; font-size: 11px;">Бол.</button>
       </div>
-      <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-        <button class="btn-tab active app-field-type" data-type="short" style="background: #5865f2; color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 12px;">Короткая</button>
-        <button class="btn-tab app-field-type" data-type="long" style="background: #36393f; color: #b9bbbe; padding: 4px 12px; border-radius: 20px; font-size: 12px;">Большая</button>
-      </div>
-      <input type="text" class="form-input app-field-hint" placeholder="Подсказка (необязательно)" style="background: #0f1117;">
+      <input type="text" class="form-input app-field-hint" placeholder="Подсказка" style="flex: 1; margin: 0; padding: 8px 12px; font-size: 13px; background: #0f1117;">
+      <button class="btn-icon delete-app-field" style="color: #ed4245; background: rgba(237, 66, 69, 0.1); border-radius: 4px; padding: 4px 8px;">✕</button>
     `;
 
     fieldDiv.querySelector('.delete-app-field').onclick = () => {
@@ -503,90 +501,35 @@ document.addEventListener('click', () => {
 
 // --- ФУНКЦИИ ДЛЯ ЗАЯВОК ---
 
-async function openAppChannelSelect(type) {
-  const dropdownId = `app-${type}-dropdown`;
-  const dropdown = document.getElementById(dropdownId);
-  
+async function loadApplicationsData() {
+  document.querySelector('#applications-rows').innerHTML = 'Заявки пока не подключены к базе. (Скоро)';
+}
+
+async function openAppRoleSelect() {
+  const dropdown = document.getElementById('app-roles-dropdown');
   document.querySelectorAll('.dropdown-content').forEach(d => { if(d !== dropdown) d.style.display = 'none'; });
   
   if (dropdown.style.display === 'block') { dropdown.style.display = 'none'; return; }
   dropdown.style.display = 'block';
 
-  // Если уже загружено - просто показываем
-  if (!dropdown.innerHTML.includes('Загрузка')) return;
-
-  try {
+  if (dropdown.innerHTML.includes('Загрузка')) {
     const guildId = localStorage.getItem('currentGuildId');
-    const res = await fetch(`${API_URL}/api/guild-channels?guild_id=${guildId}`);
-    const data = await res.json(); // Теперь тут объект { categories, channels }
-
-    // Проверка, что данные пришли в правильном формате
-    if (!data.categories || !data.channels) {
-      dropdown.innerHTML = '<p style="padding: 10px; color: #ed4245;">Ошибка: сервер вернул старый формат данных. Обновите Worker (wrangler deploy).</p>';
-      return;
-    }
-
-    const { categories, channels } = data;
-
-    let html = `
-      <div class="channel-selector-menu active" style="position: static; display: flex; box-shadow: none; border: none; margin: 0;">
-        <div class="channel-search">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9aa0b0" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          <input type="text" placeholder="Поиск каналов..." oninput="filterChannels(this)">
-        </div>
-        <div class="channel-list">
-    `;
-
-    // Каналы без категории
-    const uncategorized = channels.filter(c => !c.parent_id);
-    if (uncategorized.length > 0) {
-      html += `
-        <div class="channel-category" onclick="toggleCategory(this)">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-          Без категории
-        </div>
-      `;
-      uncategorized.forEach(c => {
-        html += `
-          <div class="channel-item" onclick="selectAppChannel('${type}', '${c.id}', '${c.name}')">
-            <span style="color:#9aa0b0;">#</span> <span>${c.name}</span>
-          </div>
-        `;
-      });
-    }
-
-    // Каналы по категориям
-    categories.forEach(cat => {
-      const catChannels = channels.filter(c => c.parent_id === cat.id);
-      if (catChannels.length === 0) return;
-
-      html += `
-        <div class="channel-category" onclick="toggleCategory(this)">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-          ${cat.name}
-        </div>
-      `;
-      catChannels.forEach(c => {
-        html += `
-          <div class="channel-item" onclick="selectAppChannel('${type}', '${c.id}', '${c.name}')">
-            <span style="color:#9aa0b0;">#</span> <span>${c.name}</span>
-          </div>
-        `;
-      });
+    const res = await fetch(`${API_URL}/api/guild-roles?guild_id=${guildId}`);
+    const roles = await res.json();
+    
+    dropdown.innerHTML = '';
+    roles.forEach(r => {
+      const item = document.createElement('div');
+      item.className = 'dropdown-item';
+      item.innerHTML = `<input type="checkbox" value="${r.id}" onchange="toggleAppRole('${r.id}', '${r.name}', this)"> <span>${r.name}</span>`;
+      dropdown.appendChild(item);
     });
 
-    html += `</div></div>`;
-    dropdown.innerHTML = html;
-
-    // Добавляем кнопку "Готово"
     const submitBtn = document.createElement('button');
     submitBtn.className = 'dropdown-submit-btn';
     submitBtn.textContent = 'Готово';
     submitBtn.onclick = () => { dropdown.style.display = 'none'; };
     dropdown.appendChild(submitBtn);
-
-  } catch (e) {
-    dropdown.innerHTML = `<p style="padding: 10px; color: #ed4245;">Ошибка загрузки: ${e.message}</p>`;
   }
 }
 
@@ -611,61 +554,85 @@ async function openAppChannelSelect(type) {
   if (dropdown.style.display === 'block') { dropdown.style.display = 'none'; return; }
   dropdown.style.display = 'block';
 
-  if (dropdown.innerHTML.includes('Загрузка')) {
+  if (!dropdown.innerHTML.includes('Загрузка')) return;
+
+  try {
     const guildId = localStorage.getItem('currentGuildId');
     const res = await fetch(`${API_URL}/api/guild-channels?guild_id=${guildId}`);
     const data = await res.json();
+
+    if (Array.isArray(data)) {
+      dropdown.innerHTML = '<p style="padding: 10px; color: #ed4245;">Сервер отдаёт старый формат! Сделайте wrangler deploy.</p>';
+      return;
+    }
+
     const { categories, channels } = data;
 
     let html = `
       <div class="channel-selector-menu active" style="position: static; display: flex; box-shadow: none; border: none; margin: 0;">
         <div class="channel-search">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9aa0b0" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          <input type="text" placeholder="Поиск каналов..." oninput="filterChannels(this)">
+          <input type="text" placeholder="Поиск..." oninput="filterChannels(this)">
         </div>
         <div class="channel-list">
     `;
 
-    // Без категории
-    const uncategorized = channels.filter(c => !c.parent_id);
-    if (uncategorized.length > 0) {
-      html += `
-        <div class="channel-category" onclick="toggleCategory(this)">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-          Без категории
-        </div>
-      `;
-      uncategorized.forEach(c => {
+    if (type === 'cat') {
+      categories.forEach(cat => {
         html += `
-          <div class="channel-item" onclick="selectAppChannel('${type}', '${c.id}', '${c.name}')">
-            <span style="color:#9aa0b0;">#</span> <span>${c.name}</span>
+          <div class="channel-item" onclick="selectAppChannel('cat', '${cat.id}', '${cat.name}')">
+            <span style="color:#9aa0b0;">📁</span> <span>${cat.name}</span>
           </div>
         `;
+      });
+    } else {
+      const uncategorized = channels.filter(c => !c.parent_id);
+      if (uncategorized.length > 0) {
+        html += `
+          <div class="channel-category" onclick="toggleCategory(this)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            Без категории
+          </div>
+        `;
+        uncategorized.forEach(c => {
+          html += `
+            <div class="channel-item" onclick="selectAppChannel('${type}', '${c.id}', '${c.name}')">
+              <span style="color:#9aa0b0;">#</span> <span>${c.name}</span>
+            </div>
+          `;
+        });
+      }
+
+      categories.forEach(cat => {
+        const catChannels = channels.filter(c => c.parent_id === cat.id);
+        if (catChannels.length === 0) return;
+
+        html += `
+          <div class="channel-category" onclick="toggleCategory(this)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            ${cat.name}
+          </div>
+        `;
+        catChannels.forEach(c => {
+          html += `
+            <div class="channel-item" onclick="selectAppChannel('${type}', '${c.id}', '${c.name}')">
+              <span style="color:#9aa0b0;">#</span> <span>${c.name}</span>
+            </div>
+          `;
+        });
       });
     }
 
-    // По категориям
-    categories.forEach(cat => {
-      const catChannels = channels.filter(c => c.parent_id === cat.id);
-      if (catChannels.length === 0) return;
-
-      html += `
-        <div class="channel-category" onclick="toggleCategory(this)">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-          ${cat.name}
-        </div>
-      `;
-      catChannels.forEach(c => {
-        html += `
-          <div class="channel-item" onclick="selectAppChannel('${type}', '${c.id}', '${c.name}')">
-            <span style="color:#9aa0b0;">#</span> <span>${c.name}</span>
-          </div>
-        `;
-      });
-    });
-
     html += `</div></div>`;
     dropdown.innerHTML = html;
+
+    const submitBtn = document.createElement('button');
+    submitBtn.className = 'dropdown-submit-btn';
+    submitBtn.textContent = 'Готово';
+    submitBtn.onclick = () => { dropdown.style.display = 'none'; };
+    dropdown.appendChild(submitBtn);
+  } catch (e) {
+    dropdown.innerHTML = `<p style="padding: 10px; color: #ed4245;">Ошибка: ${e.message}</p>`;
   }
 }
 
@@ -678,16 +645,14 @@ function selectAppChannel(type, id, name) {
     document.getElementById('app-selected-log').textContent = '# ' + name;
   } else if (type === 'cat') {
     appSelectedCategory = id;
-    document.getElementById('app-selected-category').textContent = 'Категория: ' + name;
+    document.getElementById('app-selected-category').textContent = '📁 ' + name;
   }
   document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none');
 }
 
-// Функции для поиска и сворачивания
 function filterChannels(input) {
   const filter = input.value.toLowerCase();
   const items = input.closest('.channel-selector-menu').querySelectorAll('.channel-item');
-  
   items.forEach(item => {
     const text = item.textContent.toLowerCase();
     if (text.includes(filter)) {
@@ -840,6 +805,12 @@ async function openChannelSelect(type) {
     const guildId = localStorage.getItem('currentGuildId');
     const res = await fetch(`${API_URL}/api/guild-channels?guild_id=${guildId}`);
     const data = await res.json();
+    
+    if (Array.isArray(data)) {
+      dropdown.innerHTML = '<p style="padding: 10px; color: #ed4245;">Сервер отдаёт старый формат!</p>';
+      return;
+    }
+
     const { categories, channels } = data;
 
     let html = `
@@ -889,6 +860,12 @@ async function openChannelSelect(type) {
 
     html += `</div></div>`;
     dropdown.innerHTML = html;
+
+    const submitBtn = document.createElement('button');
+    submitBtn.className = 'dropdown-submit-btn';
+    submitBtn.textContent = 'Готово';
+    submitBtn.onclick = () => { dropdown.style.display = 'none'; };
+    dropdown.appendChild(submitBtn);
   }
 }
 
@@ -927,262 +904,4 @@ function showToast(message, type = 'success') {
     toast.classList.remove('show');
     setTimeout(() => toast.remove(), 300);
   }, 3000);
-}
-// --- ФУНКЦИИ ДЛЯ УЧЁТА ---
-
-async function openRoleSelect() {
-  const dropdown = document.getElementById('roles-dropdown');
-  document.querySelectorAll('.dropdown-content').forEach(d => { if(d !== dropdown) d.style.display = 'none'; });
-  if (dropdown.style.display === 'block') { dropdown.style.display = 'none'; return; }
-  dropdown.style.display = 'block';
-  
-  if (dropdown.innerHTML.includes('Загрузка')) {
-    const guildId = localStorage.getItem('currentGuildId');
-    const res = await fetch(`${API_URL}/api/guild-roles?guild_id=${guildId}`);
-    const roles = await res.json();
-    
-    dropdown.innerHTML = '';
-    roles.forEach(r => {
-      const isChecked = selectedRoles.some(role => role.id === r.id) ? 'checked' : '';
-      const item = document.createElement('div');
-      item.className = 'dropdown-item';
-      item.innerHTML = `<input type="checkbox" value="${r.id}" ${isChecked} onchange="toggleRole('${r.id}', '${r.name}', this)"> <span>${r.name}</span>`;
-      dropdown.appendChild(item);
-    });
-
-    // 👇 ДОБАВЛЯЕМ КНОПКУ "ГОТОВО"
-    const submitBtn = document.createElement('button');
-    submitBtn.className = 'dropdown-submit-btn';
-    submitBtn.textContent = 'Готово';
-    submitBtn.onclick = () => { dropdown.style.display = 'none'; };
-    dropdown.appendChild(submitBtn);
-  }
-}
-
-async function openChannelSelect(type) {
-  const dropdownId = type === 'pub' ? 'pub-dropdown' : 'log-dropdown';
-  const dropdown = document.getElementById(dropdownId);
-  document.querySelectorAll('.dropdown-content').forEach(d => { if(d !== dropdown) d.style.display = 'none'; });
-  if (dropdown.style.display === 'block') { dropdown.style.display = 'none'; return; }
-  dropdown.style.display = 'block';
-
-  if (dropdown.innerHTML.includes('Загрузка')) {
-    const guildId = localStorage.getItem('currentGuildId');
-    const res = await fetch(`${API_URL}/api/guild-channels?guild_id=${guildId}`);
-    const data = await res.json();
-    const { categories, channels } = data;
-
-    let html = `
-      <div class="channel-selector-menu active" style="position: static; display: flex; box-shadow: none; border: none; margin: 0;">
-        <div class="channel-search">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9aa0b0" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          <input type="text" placeholder="Поиск каналов..." oninput="filterChannels(this)">
-        </div>
-        <div class="channel-list">
-    `;
-
-    const uncategorized = channels.filter(c => !c.parent_id);
-    if (uncategorized.length > 0) {
-      html += `
-        <div class="channel-category" onclick="toggleCategory(this)">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-          Без категории
-        </div>
-      `;
-      uncategorized.forEach(c => {
-        const isChecked = (type === 'pub' && selectedPubChannel === c.id) || (type === 'log' && selectedLogChannel === c.id) ? 'checked' : '';
-        html += `
-          <div class="channel-item" onclick="selectChannel('${type}', '${c.id}', '${c.name}')">
-            <span style="color:#9aa0b0;">#</span> <span>${c.name}</span>
-          </div>
-        `;
-      });
-    }
-
-    categories.forEach(cat => {
-      const catChannels = channels.filter(c => c.parent_id === cat.id);
-      if (catChannels.length === 0) return;
-
-      html += `
-        <div class="channel-category" onclick="toggleCategory(this)">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-          ${cat.name}
-        </div>
-      `;
-      catChannels.forEach(c => {
-        const isChecked = (type === 'pub' && selectedPubChannel === c.id) || (type === 'log' && selectedLogChannel === c.id) ? 'checked' : '';
-        html += `
-          <div class="channel-item" onclick="selectChannel('${type}', '${c.id}', '${c.name}')">
-            <span style="color:#9aa0b0;">#</span> <span>${c.name}</span>
-          </div>
-        `;
-      });
-    });
-
-    html += `</div></div>`;
-    dropdown.innerHTML = html;
-
-    // 👇 ДОБАВЛЯЕМ КНОПКУ "ГОТОВО" В КОНЕЦ
-    const submitBtn = document.createElement('button');
-    submitBtn.className = 'dropdown-submit-btn';
-    submitBtn.textContent = 'Готово';
-    submitBtn.onclick = () => { dropdown.style.display = 'none'; };
-    dropdown.appendChild(submitBtn);
-  }
-}
-
-// --- ФУНКЦИИ ДЛЯ ЗАЯВОК ---
-
-async function openAppRoleSelect() {
-  const dropdown = document.getElementById('app-roles-dropdown');
-  document.querySelectorAll('.dropdown-content').forEach(d => { if(d !== dropdown) d.style.display = 'none'; });
-  
-  if (dropdown.style.display === 'block') { dropdown.style.display = 'none'; return; }
-  dropdown.style.display = 'block';
-
-  if (dropdown.innerHTML.includes('Загрузка')) {
-    const guildId = localStorage.getItem('currentGuildId');
-    const res = await fetch(`${API_URL}/api/guild-roles?guild_id=${guildId}`);
-    const roles = await res.json();
-    
-    dropdown.innerHTML = '';
-    roles.forEach(r => {
-      const isChecked = appSelectedRoles.some(role => role.id === r.id) ? 'checked' : '';
-      const item = document.createElement('div');
-      item.className = 'dropdown-item';
-      item.innerHTML = `<input type="checkbox" value="${r.id}" ${isChecked} onchange="toggleAppRole('${r.id}', '${r.name}', this)"> <span>${r.name}</span>`;
-      dropdown.appendChild(item);
-    });
-
-    // 👇 ДОБАВЛЯЕМ КНОПКУ "ГОТОВО"
-    const submitBtn = document.createElement('button');
-    submitBtn.className = 'dropdown-submit-btn';
-    submitBtn.textContent = 'Готово';
-    submitBtn.onclick = () => { dropdown.style.display = 'none'; };
-    dropdown.appendChild(submitBtn);
-  }
-}
-
-async function openAppChannelSelect(type) {
-  const dropdownId = `app-${type}-dropdown`;
-  const dropdown = document.getElementById(dropdownId);
-  
-  document.querySelectorAll('.dropdown-content').forEach(d => { if(d !== dropdown) d.style.display = 'none'; });
-  
-  if (dropdown.style.display === 'block') { dropdown.style.display = 'none'; return; }
-  dropdown.style.display = 'block';
-
-  if (!dropdown.innerHTML.includes('Загрузка')) return;
-
-  try {
-    const guildId = localStorage.getItem('currentGuildId');
-    const res = await fetch(`${API_URL}/api/guild-channels?guild_id=${guildId}`);
-    const data = await res.json();
-
-    if (Array.isArray(data)) {
-      dropdown.innerHTML = '<p style="padding: 10px; color: #ed4245;">Сервер отдаёт старый формат! Сделайте wrangler deploy.</p>';
-      return;
-    }
-
-    const { categories, channels } = data;
-
-    let html = `
-      <div class="channel-selector-menu active" style="position: static; display: flex; box-shadow: none; border: none; margin: 0;">
-        <div class="channel-search">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9aa0b0" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          <input type="text" placeholder="Поиск..." oninput="filterChannels(this)">
-        </div>
-        <div class="channel-list">
-    `;
-
-    // 👇 ЕСЛИ ВЫБИРАЕМ КАТЕГОРИЮ (type === 'cat') — ПОКАЗЫВАЕМ ТОЛЬКО КАТЕГОРИИ
-    if (type === 'cat') {
-      categories.forEach(cat => {
-        html += `
-          <div class="channel-item" onclick="selectAppChannel('cat', '${cat.id}', '${cat.name}')">
-            <span style="color:#9aa0b0;">📁</span> <span>${cat.name}</span>
-          </div>
-        `;
-      });
-    } else {
-      // 👇 ДЛЯ КАНАЛОВ (pub/log) — ПОКАЗЫВАЕМ КАНАЛЫ ПО КАТЕГОРИЯМ
-      const uncategorized = channels.filter(c => !c.parent_id);
-      if (uncategorized.length > 0) {
-        html += `
-          <div class="channel-category" onclick="toggleCategory(this)">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            Без категории
-          </div>
-        `;
-        uncategorized.forEach(c => {
-          html += `
-            <div class="channel-item" onclick="selectAppChannel('${type}', '${c.id}', '${c.name}')">
-              <span style="color:#9aa0b0;">#</span> <span>${c.name}</span>
-            </div>
-          `;
-        });
-      }
-
-      categories.forEach(cat => {
-        const catChannels = channels.filter(c => c.parent_id === cat.id);
-        if (catChannels.length === 0) return;
-
-        html += `
-          <div class="channel-category" onclick="toggleCategory(this)">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            ${cat.name}
-          </div>
-        `;
-        catChannels.forEach(c => {
-          html += `
-            <div class="channel-item" onclick="selectAppChannel('${type}', '${c.id}', '${c.name}')">
-              <span style="color:#9aa0b0;">#</span> <span>${c.name}</span>
-            </div>
-          `;
-        });
-      });
-    }
-
-    html += `</div></div>`;
-    dropdown.innerHTML = html;
-
-    const submitBtn = document.createElement('button');
-    submitBtn.className = 'dropdown-submit-btn';
-    submitBtn.textContent = 'Готово';
-    submitBtn.onclick = () => { dropdown.style.display = 'none'; };
-    dropdown.appendChild(submitBtn);
-  } catch (e) {
-    dropdown.innerHTML = `<p style="padding: 10px; color: #ed4245;">Ошибка: ${e.message}</p>`;
-  }
-}
-
-    categories.forEach(cat => {
-      const catChannels = channels.filter(c => c.parent_id === cat.id);
-      if (catChannels.length === 0) return;
-
-      html += `
-        <div class="channel-category" onclick="toggleCategory(this)">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-          ${cat.name}
-        </div>
-      `;
-      catChannels.forEach(c => {
-        html += `
-          <div class="channel-item" onclick="selectAppChannel('${type}', '${c.id}', '${c.name}')">
-            <span style="color:#9aa0b0;">#</span> <span>${c.name}</span>
-          </div>
-        `;
-      });
-    });
-
-    html += `</div></div>`;
-    dropdown.innerHTML = html;
-
-    // 👇 ДОБАВЛЯЕМ КНОПКУ "ГОТОВО" В КОНЕЦ
-    const submitBtn = document.createElement('button');
-    submitBtn.className = 'dropdown-submit-btn';
-    submitBtn.textContent = 'Готово';
-    submitBtn.onclick = () => { dropdown.style.display = 'none'; };
-    dropdown.appendChild(submitBtn);
-  }
 }
