@@ -259,12 +259,11 @@ window.addEventListener('DOMContentLoaded', () => {
     list.appendChild(fieldDiv);
   });
 
-  // ОТПРАВКА ЗАЯВКИ (С ПРОВЕРКАМИ)
+  // ОТПРАВКА ЗАЯВКИ
   publishAppBtn?.addEventListener('click', async () => {
     const name = document.getElementById('app-name').value;
     const guildId = localStorage.getItem('currentGuildId');
     
-    // 👇 ПРОВЕРКИ НА ОБЯЗАТЕЛЬНЫЕ ПОЛЯ
     if (!name) {
       showToast("Пожалуйста, введите название заявки!", "error");
       return;
@@ -282,16 +281,23 @@ window.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Собираем вопросы
+    // Безопасный сбор вопросов
     const questions = [];
-    document.querySelectorAll('.app-field-title').forEach((input) => {
-      const title = input.value;
-      const typeBtn = input.closest('div').nextElementSibling.querySelector('.app-field-type.active');
-      const type = typeBtn ? typeBtn.dataset.type : 'short';
-      const hint = input.closest('div').parentElement.querySelector('.app-field-hint').value;
-      
-      if (title) {
-        questions.push({ title, type, hint });
+    const fieldContainers = document.querySelectorAll('#app-fields-list > div');
+    fieldContainers.forEach(container => {
+      // Пропускаем заглушку, если она есть
+      if (container.innerText.includes('Нет добавленных вопросов')) return;
+
+      const titleInput = container.querySelector('.app-field-title');
+      const hintInput = container.querySelector('.app-field-hint');
+      const activeType = container.querySelector('.app-field-type.active');
+
+      if (titleInput && titleInput.value.trim() !== '') {
+        questions.push({
+          title: titleInput.value,
+          type: activeType ? activeType.dataset.type : 'short',
+          hint: hintInput ? hintInput.value : ''
+        });
       }
     });
 
