@@ -288,6 +288,19 @@
             </div>
             <span style="color: #ed4245; font-size: 12px; margin-top: 4px;">Выберите хотя бы одну роль для рассмотрения</span>
           </div>
+
+          <!-- 👇 НОВОЕ ПОЛЕ: РОЛЬ ДЛЯ ВЫДАЧИ -->
+          <div class="form-group" style="margin-top: 20px;">
+            <label>Роль, выдаваемая при принятии заявки *</label>
+            <div class="custom-select-box" id="app-role-to-give-box">
+              <div class="selected-items" id="app-selected-role-to-give">Выберите роль...</div>
+              <button type="button" class="btn-plus" onclick="openAppRoleToGiveSelect()">+</button>
+            </div>
+            <div id="app-role-to-give-dropdown" class="dropdown-content" style="display: none;">
+               <p style="padding: 10px; color: #9aa0b0; font-size: 12px;">Загрузка ролей...</p>
+            </div>
+            <span style="color: #ed4245; font-size: 12px; margin-top: 4px;">Эта роль будет выдана игроку при нажатии «Принять»</span>
+          </div>
         </div>
 
         <!-- Блок: Настройка каналов -->
