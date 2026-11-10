@@ -21,7 +21,7 @@ let appSelectedPub = null;
 let appSelectedLog = null;
 let appSelectedCategory = null;
 let appSelectedRoles = [];
-let editingAppId = null; // 🔥 Для редактирования заявок
+let editingAppId = null; 
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -206,14 +206,13 @@ window.addEventListener('DOMContentLoaded', () => {
   const closeAppModal = document.getElementById('close-application-modal');
   const cancelAppBtn = document.getElementById('cancel-app-btn');
   const publishAppBtn = document.getElementById('publish-app-btn');
-  const saveAppBtn = document.getElementById('save-app-btn'); // 👈 Новая кнопка
+  const saveAppBtn = document.getElementById('save-app-btn');
 
   openAppModal?.addEventListener('click', () => {
-    editingAppId = null; // Сбрасываем ID при создании новой
+    editingAppId = null;
     appModal.classList.add('active');
     document.getElementById('app-modal-title').textContent = 'Новая заявка';
     document.getElementById('app-fields-list').innerHTML = ''; 
-    // Сброс переменных
     appSelectedPub = null; appSelectedLog = null; appSelectedCategory = null; appSelectedRoles = [];
     document.getElementById('app-selected-pub').textContent = 'Выберите канал...';
     document.getElementById('app-selected-log').textContent = 'Выберите канал...';
@@ -357,7 +356,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
       showToast(editingAppId ? "Заявка обновлена!" : "Заявка опубликована!", "success");
       appModal.classList.remove('active');
-      loadApplicationsData(); // Перезагружаем таблицу
+      loadApplicationsData();
       editingAppId = null;
       
     } catch (error) {
@@ -637,30 +636,45 @@ function addApplicationRow(id, name, channelId, createdAt) {
   container.appendChild(row);
 }
 
-// 🔥 НОВАЯ ФУНКЦИЯ: Открытие окна редактирования заявки
+// 🔥 НОВАЯ ФУНКЦИЯ: Открытие окна редактирования заявки (С ПОДСТАНОВКОЙ ИМЕН)
 async function openEditApplicationModal(id) {
   try {
     const response = await fetch(`${API_URL}/api/applications/${id}`);
     if (!response.ok) throw new Error('Не удалось загрузить данные');
     const data = await response.json();
 
-    editingAppId = id; // Запоминаем ID
+    editingAppId = id;
     document.getElementById('modal-application').classList.add('active');
     document.getElementById('app-modal-title').textContent = 'Редактирование заявки';
 
-    // Заполняем поля
+    // Заполняем простые поля
     document.getElementById('app-name').value = data.name;
     document.getElementById('app-msg-text').value = data.message_text || '';
     document.getElementById('app-btn-text').value = data.button_text || 'Подать заявку';
 
-    // Устанавливаем каналы и категорию (пока показываем ID)
+    // Сохраняем ID
     appSelectedPub = data.channel_id;
     appSelectedLog = data.channel_logs_id;
     appSelectedCategory = data.category_id;
 
-    document.getElementById('app-selected-pub').textContent = 'Канал: ' + data.channel_id;
-    document.getElementById('app-selected-log').textContent = 'Канал: ' + data.channel_logs_id;
-    document.getElementById('app-selected-category').textContent = '📁 ' + (data.category_id || 'Не выбрана');
+    // 👇 ЗАГРУЖАЕМ КАНАЛЫ, ЧТОБЫ ПОКАЗАТЬ ИХ НАЗВАНИЯ
+    const guildId = localStorage.getItem('currentGuildId');
+    const chRes = await fetch(`${API_URL}/api/guild-channels?guild_id=${guildId}`);
+    const chData = await chRes.json();
+    
+    if (!Array.isArray(chData)) {
+        // Канал публикации
+        const pubChannel = chData.channels.find(c => c.id === data.channel_id);
+        document.getElementById('app-selected-pub').textContent = pubChannel ? '# ' + pubChannel.name : 'Канал не найден';
+
+        // Канал логов
+        const logChannel = chData.channels.find(c => c.id === data.channel_logs_id);
+        document.getElementById('app-selected-log').textContent = logChannel ? '# ' + logChannel.name : 'Канал не найден';
+
+        // Категория
+        const category = chData.categories.find(c => c.id === data.category_id);
+        document.getElementById('app-selected-category').textContent = category ? '📁 ' + category.name : 'Категория не найдена';
+    }
 
     // Заполняем роли
     appSelectedRoles = data.roles || [];
