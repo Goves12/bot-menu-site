@@ -407,3 +407,76 @@ body::after { background: #eb459e; bottom: -100px; right: -100px; animation-dela
   transform: translateY(0);
   opacity: 1;
 }
+/* Красивые кнопки для вкладок и заголовков */
+.modal-header h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* Кнопка статистики */
+.btn-stat {
+  background: transparent;
+  border: 1px solid #5865f2;
+  color: #5865f2;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-stat:hover {
+  background: rgba(88, 101, 242, 0.1);
+}
+
+/* Вкладки */
+.modal-tabs {
+  display: flex;
+  gap: 20px;
+  padding: 20px 24px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.modal-tab {
+  padding-bottom: 10px;
+  font-weight: 600;
+  color: #9aa0b0;
+  cursor: pointer;
+  transition: color 0.2s;
+  border-bottom: 2px solid transparent;
+}
+.modal-tab:hover {
+  color: #fff;
+}
+.modal-tab.active {
+  color: #fff;
+  border-bottom-color: #5865f2;
+}
+
+/* Переключатель (Toggle) */
+.toggle-switch {
+  width: 40px;
+  height: 22px;
+  background: #36393f;
+  border-radius: 20px;
+  position: relative;
+  cursor: pointer;
+  transition: 0.2s;
+  border: none;
+}
+.toggle-switch.active {
+  background: #5865f2;
+}
+.toggle-switch::after {
+  content: '';
+  width: 18px;
+  height: 18px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: 0.2s;
+}
+.toggle-switch.active::after {
+  left: 20px;
+}

@@ -14,7 +14,13 @@ let selectedPubChannel = null;
 let selectedPubChannelName = '';
 let selectedLogChannel = null;
 let selectedLogChannelName = '';
-let editingId = null; // 🔥 ГЛОБАЛЬНАЯ ПЕРЕМЕННАЯ ДЛЯ ID ПРИ РЕДАКТИРОВАНИИ
+let editingId = null; 
+
+// Переменные для заявок
+let appSelectedPub = null;
+let appSelectedLog = null;
+let appSelectedCategory = null;
+let appSelectedRoles = [];
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -30,7 +36,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 2. Переход на экран Учёта
+  // 2. Переход на экран Учёта и Заявок
   document.querySelectorAll('.module-card').forEach(card => {
     const title = card.querySelector('h3').textContent;
     if (title === 'Учёт') {
@@ -39,11 +45,18 @@ window.addEventListener('DOMContentLoaded', () => {
         loadAccountingData(); 
       };
     }
+    if (title === 'Заявки') {
+      card.querySelector('button').onclick = () => {
+        showScreen('screen-applications');
+        loadApplicationsData(); 
+      };
+    }
   });
 
   // 3. Кнопки "Назад"
   document.getElementById('back-to-servers')?.addEventListener('click', () => showScreen('screen-servers'));
   document.getElementById('back-to-settings')?.addEventListener('click', () => showScreen('screen-settings'));
+  document.getElementById('back-to-settings-apps')?.addEventListener('click', () => showScreen('screen-settings'));
 
   // 4. Модальное окно учёта
   const modal = document.getElementById('modal-accounting');
@@ -63,7 +76,7 @@ window.addEventListener('DOMContentLoaded', () => {
     selectedRoles = [];
     selectedPubChannel = null;
     selectedLogChannel = null;
-    editingId = null; // 🔥 СБРАСЫВАЕМ ID, ЧТОБЫ ЗНАТЬ, ЧТО ЭТО СОЗДАНИЕ
+    editingId = null;
 
     modalTitle.textContent = 'Новый учёт';
     modal.classList.add('active');
@@ -72,7 +85,7 @@ window.addEventListener('DOMContentLoaded', () => {
   btnCloseModal?.addEventListener('click', () => modal.classList.remove('active'));
   modal?.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
 
-  // 5. Добавление объектов в форму
+  // 5. Добавление объектов в форму (Учёт)
   const addObjBtn = document.getElementById('add-object-btn');
   const objectsList = document.getElementById('objects-list');
 
@@ -100,19 +113,17 @@ window.addEventListener('DOMContentLoaded', () => {
     objectsList.appendChild(objDiv);
   });
 
-  // 6. Кнопки Отмена / Сохранить / Опубликовать
+  // 6. Кнопки Отмена / Сохранить / Опубликовать (Учёт)
   const btnCancel = document.getElementById('btn-cancel');
   const btnSave = document.getElementById('btn-save');
   const btnPublish = document.getElementById('btn-publish');
 
   btnCancel?.addEventListener('click', () => modal.classList.remove('active'));
-  
   btnSave?.addEventListener('click', () => {
     showToast("Черновик сохранён (пока не реализовано)", "success");
     modal.classList.remove('active');
   });
 
-  // Кнопка Опубликовать - отправляет данные
   btnPublish?.addEventListener('click', async () => {
     const name = document.getElementById('acc-name').value;
     const guildId = localStorage.getItem('currentGuildId');
@@ -139,7 +150,6 @@ window.addEventListener('DOMContentLoaded', () => {
           });
       });
 
-      // 🔥 ВЫБИРАЕМ МЕТОД: POST (создать) или PUT (обновить)
       const method = editingId ? 'PUT' : 'POST';
       const url = editingId ? `${API_URL}/api/accounting/${editingId}` : `${API_URL}/api/accounting`;
 
@@ -158,7 +168,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
       if (!saveResponse.ok) throw new Error('Ошибка сохранения в БД');
 
-      // Отправляем боту
       const botResponse = await fetch(`${API_URL}/api/send-accounting`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -175,12 +184,11 @@ window.addEventListener('DOMContentLoaded', () => {
       const result = await botResponse.json();
       if (!result.success) throw new Error(result.error || 'Бот не отвечает');
 
-      // Перезагружаем таблицу
       loadAccountingData();
       
       modal.classList.remove('active');
       showToast(editingId ? "Учёт обновлен!" : "Учёт создан!", "success");
-      editingId = null; // Сбрасываем после сохранения
+      editingId = null;
       
     } catch (error) {
       showToast("Ошибка при публикации: " + error.message, "error");
@@ -191,6 +199,131 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // 7. Модальное окно ЗАЯВОК
+  const appModal = document.getElementById('modal-application');
+  const openAppModal = document.getElementById('open-application-modal');
+  const closeAppModal = document.getElementById('close-application-modal');
+  const cancelAppBtn = document.getElementById('cancel-app-btn');
+  const publishAppBtn = document.getElementById('publish-app-btn');
+
+  openAppModal?.addEventListener('click', () => {
+    appModal.classList.add('active');
+    document.getElementById('app-modal-title').textContent = 'Новая заявка';
+    document.getElementById('app-fields-list').innerHTML = ''; 
+    // Сброс переменных
+    appSelectedPub = null; appSelectedLog = null; appSelectedCategory = null; appSelectedRoles = [];
+    document.getElementById('app-selected-pub').textContent = 'Выберите канал...';
+    document.getElementById('app-selected-log').textContent = 'Выберите канал...';
+    document.getElementById('app-selected-category').textContent = 'Выберите категорию...';
+    document.getElementById('app-selected-roles').textContent = 'Выберите роли...';
+  });
+
+  closeAppModal?.addEventListener('click', () => appModal.classList.remove('active'));
+  cancelAppBtn?.addEventListener('click', () => appModal.classList.remove('active'));
+  appModal?.addEventListener('click', (e) => { if (e.target === appModal) appModal.classList.remove('active'); });
+
+  // Добавление вопроса в заявку
+  document.getElementById('add-app-field')?.addEventListener('click', () => {
+    const list = document.getElementById('app-fields-list');
+    if (list.innerText.includes('Нет добавленных вопросов')) list.innerHTML = '';
+
+    const fieldDiv = document.createElement('div');
+    fieldDiv.style.cssText = 'background: #1e222d; border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 15px; position: relative;';
+    
+    fieldDiv.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <input type="text" class="form-input app-field-title" placeholder="Вопрос (например: Ваш ник в игре)" style="border: none; background: transparent; font-weight: 600; width: 80%; padding: 0;">
+        <button class="btn-icon delete-app-field" style="color: #ed4245; background: rgba(237, 66, 69, 0.1); border-radius: 6px; padding: 4px 8px;">✕</button>
+      </div>
+      <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+        <button class="btn-tab active app-field-type" data-type="short" style="background: #5865f2; color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 12px;">Короткая</button>
+        <button class="btn-tab app-field-type" data-type="long" style="background: #36393f; color: #b9bbbe; padding: 4px 12px; border-radius: 20px; font-size: 12px;">Большая</button>
+      </div>
+      <input type="text" class="form-input app-field-hint" placeholder="Подсказка (необязательно)" style="background: #0f1117;">
+    `;
+
+    fieldDiv.querySelector('.delete-app-field').onclick = () => {
+      fieldDiv.remove();
+      if (list.children.length === 0) {
+        list.innerHTML = '<div style="text-align: center; padding: 20px; color: #9aa0b0; border: 1px dashed rgba(255,255,255,0.1); border-radius: 8px;">Нет добавленных вопросов. Нажмите «Добавить вопрос».</div>';
+      }
+    };
+
+    fieldDiv.querySelectorAll('.app-field-type').forEach(btn => {
+      btn.onclick = () => {
+        fieldDiv.querySelectorAll('.app-field-type').forEach(b => {
+          b.style.background = '#36393f'; b.style.color = '#b9bbbe'; b.classList.remove('active');
+        });
+        btn.style.background = '#5865f2'; btn.style.color = '#fff'; btn.classList.add('active');
+      };
+    });
+
+    list.appendChild(fieldDiv);
+  });
+
+  // ОТПРАВКА ЗАЯВКИ
+  publishAppBtn?.addEventListener('click', async () => {
+    const name = document.getElementById('app-name').value;
+    const guildId = localStorage.getItem('currentGuildId');
+    
+    if (!name || !appSelectedPub) {
+      showToast("Пожалуйста, заполните название и выберите канал публикации!", "error");
+      return;
+    }
+
+    // Собираем вопросы
+    const questions = [];
+    document.querySelectorAll('.app-field-title').forEach((input) => {
+      const title = input.value;
+      const typeBtn = input.closest('div').nextElementSibling.querySelector('.app-field-type.active');
+      const type = typeBtn ? typeBtn.dataset.type : 'short';
+      const hint = input.closest('div').parentElement.querySelector('.app-field-hint').value;
+      
+      if (title) {
+        questions.push({ title, type, hint });
+      }
+    });
+
+    const originalText = publishAppBtn.textContent;
+    publishAppBtn.textContent = "Отправка...";
+    publishAppBtn.disabled = true;
+    publishAppBtn.style.opacity = '0.7';
+
+    try {
+      const response = await fetch(`${API_URL}/api/send-application`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          guildId: guildId,
+          name: name,
+          channelId: appSelectedPub,
+          channelLogsId: appSelectedLog,
+          categoryId: appSelectedCategory,
+          buttonText: document.getElementById('app-btn-text').value,
+          buttonColor: 'Primary',
+          messageText: document.getElementById('app-msg-text').value,
+          questions: questions
+        })
+      });
+
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Ошибка отправки');
+      }
+
+      showToast("Заявка успешно опубликована!", "success");
+      appModal.classList.remove('active');
+      
+    } catch (error) {
+      showToast("Ошибка: " + error.message, "error");
+    } finally {
+      publishAppBtn.textContent = originalText;
+      publishAppBtn.disabled = false;
+      publishAppBtn.style.opacity = '1';
+    }
+  });
+
   if (localStorage.getItem('discord_token')) {
     loadGuilds();
   } else {
@@ -198,7 +331,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// --- ФУНКЦИИ ДЛЯ РАБОТЫ С БАЗОЙ ---
+// --- ФУНКЦИИ ДЛЯ УЧЁТА ---
 
 async function loadAccountingData() {
   const guildId = localStorage.getItem('currentGuildId');
@@ -279,7 +412,6 @@ function addAccountingRow(id, name, channelId, channelName, items = []) {
     menu.classList.toggle('active');
   };
 
-  // УДАЛЕНИЕ
   row.querySelector('.delete-btn').onclick = async () => {
     if (!confirm('Вы уверены, что хотите удалить этот учёт?')) return;
 
@@ -304,7 +436,6 @@ function addAccountingRow(id, name, channelId, channelName, items = []) {
     }
   };
 
-  // РЕДАКТИРОВАНИЕ
   row.querySelector('.edit-btn').onclick = () => {
     openEditModal(id);
   };
@@ -312,32 +443,27 @@ function addAccountingRow(id, name, channelId, channelName, items = []) {
   container.appendChild(row);
 }
 
-// Функция открытия окна редактирования
 async function openEditModal(id) {
   try {
     const response = await fetch(`${API_URL}/api/accounting/${id}`);
     if (!response.ok) throw new Error('Не удалось загрузить данные');
     const data = await response.json();
 
-    editingId = id; // 🔥 ЗАПОМИНАЕМ, ЧТО РЕДАКТИРУЕМ
+    editingId = id;
     document.getElementById('modal-accounting').classList.add('active');
     document.getElementById('modal-title').textContent = 'Редактирование учёта';
 
-    // Заполняем поля
     document.getElementById('acc-name').value = data.name;
     
-    // Устанавливаем канал публикации
     selectedPubChannel = data.channel_id;
     selectedPubChannelName = data.channel_name;
     document.getElementById('selected-pub-channel').textContent = '# ' + data.channel_name;
 
-    // Устанавливаем канал логов
     if (data.channel_logs_id) {
       selectedLogChannel = data.channel_logs_id;
       document.getElementById('selected-log-channel').textContent = '# ' + (data.channel_logs_id ? 'Канал логов' : '');
     }
 
-    // Заполняем предметы
     const objectsList = document.getElementById('objects-list');
     objectsList.innerHTML = '';
     
@@ -372,6 +498,89 @@ async function openEditModal(id) {
 
 document.addEventListener('click', () => {
   document.querySelectorAll('.action-menu').forEach(m => m.classList.remove('active'));
+});
+
+// --- ФУНКЦИИ ДЛЯ ЗАЯВОК ---
+
+async function loadApplicationsData() {
+  document.querySelector('#applications-rows').innerHTML = 'Заявки пока не подключены к базе. (Скоро)';
+}
+
+async function openAppChannelSelect(type) {
+  const dropdownId = `app-${type}-dropdown`;
+  const dropdown = document.getElementById(dropdownId);
+  
+  document.querySelectorAll('.dropdown-content').forEach(d => { if(d !== dropdown) d.style.display = 'none'; });
+  
+  if (dropdown.style.display === 'block') { dropdown.style.display = 'none'; return; }
+  dropdown.style.display = 'block';
+
+  if (dropdown.innerHTML.includes('Загрузка')) {
+    const guildId = localStorage.getItem('currentGuildId');
+    const res = await fetch(`${API_URL}/api/guild-channels?guild_id=${guildId}`);
+    const channels = await res.json();
+
+    dropdown.innerHTML = '';
+    channels.forEach(c => {
+      const item = document.createElement('div');
+      item.className = 'dropdown-item';
+      item.innerHTML = `<input type="radio" name="app-${type}" value="${c.id}" onchange="selectAppChannel('${type}', '${c.id}', '${c.name}')"> <span># ${c.name}</span>`;
+      dropdown.appendChild(item);
+    });
+  }
+}
+
+function selectAppChannel(type, id, name) {
+  if (type === 'pub') {
+    appSelectedPub = id;
+    document.getElementById('app-selected-pub').textContent = '# ' + name;
+  } else if (type === 'log') {
+    appSelectedLog = id;
+    document.getElementById('app-selected-log').textContent = '# ' + name;
+  } else if (type === 'cat') {
+    appSelectedCategory = id;
+    document.getElementById('app-selected-category').textContent = 'Категория: ' + name;
+  }
+}
+
+async function openAppRoleSelect() {
+  const dropdown = document.getElementById('app-roles-dropdown');
+  document.querySelectorAll('.dropdown-content').forEach(d => { if(d !== dropdown) d.style.display = 'none'; });
+  
+  if (dropdown.style.display === 'block') { dropdown.style.display = 'none'; return; }
+  dropdown.style.display = 'block';
+
+  if (dropdown.innerHTML.includes('Загрузка')) {
+    const guildId = localStorage.getItem('currentGuildId');
+    const res = await fetch(`${API_URL}/api/guild-roles?guild_id=${guildId}`);
+    const roles = await res.json();
+    
+    dropdown.innerHTML = '';
+    roles.forEach(r => {
+      const item = document.createElement('div');
+      item.className = 'dropdown-item';
+      item.innerHTML = `<input type="checkbox" value="${r.id}" onchange="toggleAppRole('${r.id}', '${r.name}', this)"> <span>${r.name}</span>`;
+      dropdown.appendChild(item);
+    });
+  }
+}
+
+function toggleAppRole(id, name, checkbox) {
+  if (checkbox.checked) {
+    appSelectedRoles.push({ id, name });
+  } else {
+    appSelectedRoles = appSelectedRoles.filter(r => r.id !== id);
+  }
+  
+  const box = document.getElementById('app-selected-roles');
+  if (appSelectedRoles.length === 0) box.textContent = 'Выберите роли...';
+  else box.textContent = appSelectedRoles.map(r => r.name).join(', ');
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.custom-select-box') && !e.target.closest('.dropdown-content')) {
+    document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none');
+  }
 });
 
 // --- ОСТАЛЬНЫЕ ФУНКЦИИ ---
@@ -537,13 +746,6 @@ function selectChannel(type, id, name) {
   }
 }
 
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.custom-select-box') && !e.target.closest('.dropdown-content')) {
-    document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none');
-  }
-});
-
-// Функция для показа красивого уведомления
 function showToast(message, type = 'success') {
   const oldToast = document.querySelector('.toast-notification');
   if (oldToast) oldToast.remove();
@@ -566,87 +768,4 @@ function showToast(message, type = 'success') {
     toast.classList.remove('show');
     setTimeout(() => toast.remove(), 300);
   }, 3000);
-}
-// ==========================================
-// ЛОГИКА ДЛЯ ЗАЯВОК (НОВЫЙ МОДУЛЬ)
-// ==========================================
-
-// Открытие экрана заявок
-document.querySelectorAll('.module-card').forEach(card => {
-  const title = card.querySelector('h3').textContent;
-  if (title === 'Заявки') {
-    card.querySelector('button').onclick = () => {
-      showScreen('screen-applications');
-      loadApplicationsData(); // Загружаем данные из базы
-    };
-  }
-});
-
-// Кнопка "Назад" с экрана заявок
-document.getElementById('back-to-settings-apps')?.addEventListener('click', () => {
-  showScreen('screen-settings');
-});
-
-// Открытие модального окна
-document.getElementById('open-application-modal')?.addEventListener('click', () => {
-  document.getElementById('modal-application').classList.add('active');
-  document.getElementById('app-modal-title').textContent = 'Новая заявка';
-  document.getElementById('app-fields-list').innerHTML = ''; // Очищаем вопросы
-  // Сбрасываем поля (можно добавить больше сбросов)
-});
-
-// Закрытие модального окна
-document.getElementById('close-application-modal')?.addEventListener('click', () => {
-  document.getElementById('modal-application').classList.remove('active');
-});
-
-document.getElementById('cancel-app-btn')?.addEventListener('click', () => {
-  document.getElementById('modal-application').classList.remove('active');
-});
-
-// Добавление нового вопроса
-document.getElementById('add-app-field')?.addEventListener('click', () => {
-  const list = document.getElementById('app-fields-list');
-  if (list.innerText.includes('Нет добавленных вопросов')) list.innerHTML = '';
-
-  const fieldDiv = document.createElement('div');
-  fieldDiv.style.cssText = 'background: #1e222d; border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 15px; position: relative;';
-  
-  fieldDiv.innerHTML = `
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-      <input type="text" class="form-input app-field-title" placeholder="Вопрос (например: Ваш ник в игре)" style="border: none; background: transparent; font-weight: 600; width: 80%; padding: 0;">
-      <button class="btn-icon delete-app-field" style="color: #ed4245; background: rgba(237, 66, 69, 0.1); border-radius: 6px; padding: 4px 8px;">✕</button>
-    </div>
-    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-      <button class="btn-tab active app-field-type" data-type="short" style="background: #5865f2; color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 12px;">Короткая</button>
-      <button class="btn-tab app-field-type" data-type="long" style="background: #36393f; color: #b9bbbe; padding: 4px 12px; border-radius: 20px; font-size: 12px;">Большая</button>
-    </div>
-    <input type="text" class="form-input app-field-hint" placeholder="Подсказка (необязательно)" style="background: #0f1117;">
-  `;
-
-  // Логика удаления вопроса
-  fieldDiv.querySelector('.delete-app-field').onclick = () => {
-    fieldDiv.remove();
-    if (list.children.length === 0) {
-      list.innerHTML = '<div style="text-align: center; padding: 20px; color: #9aa0b0; border: 1px dashed rgba(255,255,255,0.1); border-radius: 8px;">Нет добавленных вопросов. Нажмите «Добавить вопрос».</div>';
-    }
-  };
-
-  // Логика переключения типа (Короткая/Большая)
-  fieldDiv.querySelectorAll('.app-field-type').forEach(btn => {
-    btn.onclick = () => {
-      fieldDiv.querySelectorAll('.app-field-type').forEach(b => {
-        b.style.background = '#36393f'; b.style.color = '#b9bbbe'; b.classList.remove('active');
-      });
-      btn.style.background = '#5865f2'; btn.style.color = '#fff'; btn.classList.add('active');
-    };
-  });
-
-  list.appendChild(fieldDiv);
-});
-
-// Заглушка для загрузки заявок (чтобы не было ошибки)
-async function loadApplicationsData() {
-  // В будущем здесь будет запрос к базе
-  document.querySelector('#applications-rows').innerHTML = 'Заявки пока не подключены к базе. (Скоро)';
 }
