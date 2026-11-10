@@ -21,6 +21,7 @@ let appSelectedPub = null;
 let appSelectedLog = null;
 let appSelectedCategory = null;
 let appSelectedRoles = [];
+let editingAppId = null; // 🔥 Для редактирования заявок
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -205,8 +206,10 @@ window.addEventListener('DOMContentLoaded', () => {
   const closeAppModal = document.getElementById('close-application-modal');
   const cancelAppBtn = document.getElementById('cancel-app-btn');
   const publishAppBtn = document.getElementById('publish-app-btn');
+  const saveAppBtn = document.getElementById('save-app-btn'); // 👈 Новая кнопка
 
   openAppModal?.addEventListener('click', () => {
+    editingAppId = null; // Сбрасываем ID при создании новой
     appModal.classList.add('active');
     document.getElementById('app-modal-title').textContent = 'Новая заявка';
     document.getElementById('app-fields-list').innerHTML = ''; 
@@ -259,7 +262,7 @@ window.addEventListener('DOMContentLoaded', () => {
     list.appendChild(fieldDiv);
   });
 
-  // ОТПРАВКА ЗАЯВКИ
+  // ОТПРАВКА / ОБНОВЛЕНИЕ ЗАЯВКИ
   publishAppBtn?.addEventListener('click', async () => {
     const name = document.getElementById('app-name').value;
     const guildId = localStorage.getItem('currentGuildId');
@@ -281,7 +284,7 @@ window.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Безопасный сбор вопросов
+    // Собираем вопросы
     const questions = [];
     const fieldContainers = document.querySelectorAll('#app-fields-list > div');
     fieldContainers.forEach(container => {
@@ -306,9 +309,12 @@ window.addEventListener('DOMContentLoaded', () => {
     publishAppBtn.style.opacity = '0.7';
 
     try {
+      const method = editingAppId ? 'PUT' : 'POST';
+      const url = editingAppId ? `${API_URL}/api/applications/${editingAppId}` : `${API_URL}/api/applications`;
+
       // 1. СОХРАНЯЕМ В БАЗУ
-      const saveResponse = await fetch(`${API_URL}/api/applications`, {
-        method: 'POST',
+      const saveResponse = await fetch(url, {
+        method: method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           guildId: guildId,
@@ -326,33 +332,33 @@ window.addEventListener('DOMContentLoaded', () => {
 
       if (!saveResponse.ok) throw new Error('Ошибка сохранения в БД');
 
-      // 2. ОТПРАВЛЯЕМ БОТУ
-      const response = await fetch(`${API_URL}/api/send-application`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          guildId: guildId,
-          name: name,
-          channelId: appSelectedPub,
-          channelLogsId: appSelectedLog,
-          categoryId: appSelectedCategory,
-          buttonText: document.getElementById('app-btn-text').value,
-          buttonColor: 'Primary',
-          messageText: document.getElementById('app-msg-text').value,
-          questions: questions,
-          roles: appSelectedRoles
-        })
-      });
+      // 2. ОТПРАВЛЯЕМ БОТУ (только если создаём новую)
+      if (!editingAppId) {
+          const response = await fetch(`${API_URL}/api/send-application`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              guildId: guildId,
+              name: name,
+              channelId: appSelectedPub,
+              channelLogsId: appSelectedLog,
+              categoryId: appSelectedCategory,
+              buttonText: document.getElementById('app-btn-text').value,
+              buttonColor: 'Primary',
+              messageText: document.getElementById('app-msg-text').value,
+              questions: questions,
+              roles: appSelectedRoles
+            })
+          });
 
-      const result = await response.json();
-      
-      if (!result.success) {
-        throw new Error(result.error || 'Бот не отвечает');
+          const result = await response.json();
+          if (!result.success) throw new Error(result.error || 'Бот не отвечает');
       }
 
-      showToast("Заявка успешно опубликована!", "success");
+      showToast(editingAppId ? "Заявка обновлена!" : "Заявка опубликована!", "success");
       appModal.classList.remove('active');
       loadApplicationsData(); // Перезагружаем таблицу
+      editingAppId = null;
       
     } catch (error) {
       showToast("Ошибка: " + error.message, "error");
@@ -361,6 +367,12 @@ window.addEventListener('DOMContentLoaded', () => {
       publishAppBtn.disabled = false;
       publishAppBtn.style.opacity = '1';
     }
+  });
+
+  // Кнопка "Сохранить" (черновик) в заявках
+  saveAppBtn?.addEventListener('click', () => {
+    showToast("Черновик сохранён (пока не реализовано)", "success");
+    appModal.classList.remove('active');
   });
 
   if (localStorage.getItem('discord_token')) {
@@ -577,7 +589,7 @@ function addApplicationRow(id, name, channelId, createdAt) {
   
   const row = document.createElement('div');
   row.className = 'table-row';
-  row.style.gridTemplateColumns = '2fr 1fr 1fr 100px'; // Шире для двух кнопок
+  row.style.gridTemplateColumns = '2fr 1fr 1fr 100px';
   row.innerHTML = `
     <div class="table-cell-main">
       <div class="accounting-name">${name}</div>
@@ -606,7 +618,6 @@ function addApplicationRow(id, name, channelId, createdAt) {
       row.remove();
       showToast("Заявка успешно удалена!", "success");
 
-      // Обновляем счетчик
       const count = container.children.length;
       document.querySelector('#apps-count').textContent = `${count} созданных`;
       if (count === 0) {
@@ -618,12 +629,83 @@ function addApplicationRow(id, name, channelId, createdAt) {
     }
   };
 
-  // ИЗМЕНЕНИЕ (пока заглушка)
+  // ИЗМЕНЕНИЕ (вызываем новую функцию)
   row.querySelector('.edit-btn').onclick = () => {
-    showToast("Редактирование заявок пока в разработке", "error");
+    openEditApplicationModal(id);
   };
 
   container.appendChild(row);
+}
+
+// 🔥 НОВАЯ ФУНКЦИЯ: Открытие окна редактирования заявки
+async function openEditApplicationModal(id) {
+  try {
+    const response = await fetch(`${API_URL}/api/applications/${id}`);
+    if (!response.ok) throw new Error('Не удалось загрузить данные');
+    const data = await response.json();
+
+    editingAppId = id; // Запоминаем ID
+    document.getElementById('modal-application').classList.add('active');
+    document.getElementById('app-modal-title').textContent = 'Редактирование заявки';
+
+    // Заполняем поля
+    document.getElementById('app-name').value = data.name;
+    document.getElementById('app-msg-text').value = data.message_text || '';
+    document.getElementById('app-btn-text').value = data.button_text || 'Подать заявку';
+
+    // Устанавливаем каналы и категорию (пока показываем ID)
+    appSelectedPub = data.channel_id;
+    appSelectedLog = data.channel_logs_id;
+    appSelectedCategory = data.category_id;
+
+    document.getElementById('app-selected-pub').textContent = 'Канал: ' + data.channel_id;
+    document.getElementById('app-selected-log').textContent = 'Канал: ' + data.channel_logs_id;
+    document.getElementById('app-selected-category').textContent = '📁 ' + (data.category_id || 'Не выбрана');
+
+    // Заполняем роли
+    appSelectedRoles = data.roles || [];
+    const rolesText = appSelectedRoles.map(r => r.name).join(', ');
+    document.getElementById('app-selected-roles').textContent = rolesText || 'Выберите роли...';
+
+    // Заполняем вопросы
+    const list = document.getElementById('app-fields-list');
+    list.innerHTML = '';
+    
+    if (data.questions && data.questions.length > 0) {
+      data.questions.forEach(q => {
+        const fieldDiv = document.createElement('div');
+        fieldDiv.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: center; background: #1e222d; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);';
+        
+        fieldDiv.innerHTML = `
+          <input type="text" class="form-input app-field-title" value="${q.title}" style="flex: 2; margin: 0; padding: 8px 12px; font-size: 13px;">
+          <div style="display: flex; gap: 5px;">
+            <button class="btn-tab ${q.type === 'short' ? 'active' : ''} app-field-type" data-type="short" style="background: ${q.type === 'short' ? '#5865f2' : '#36393f'}; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 11px;">Кор.</button>
+            <button class="btn-tab ${q.type === 'long' ? 'active' : ''} app-field-type" data-type="long" style="background: ${q.type === 'long' ? '#5865f2' : '#36393f'}; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 11px;">Бол.</button>
+          </div>
+          <input type="text" class="form-input app-field-hint" value="${q.hint || ''}" placeholder="Подсказка" style="flex: 1; margin: 0; padding: 8px 12px; font-size: 13px; background: #0f1117;">
+          <button class="btn-icon delete-app-field" style="color: #ed4245; background: rgba(237, 66, 69, 0.1); border-radius: 4px; padding: 4px 8px;">✕</button>
+        `;
+
+        fieldDiv.querySelector('.delete-app-field').onclick = () => {
+          fieldDiv.remove();
+        };
+
+        fieldDiv.querySelectorAll('.app-field-type').forEach(btn => {
+          btn.onclick = () => {
+            fieldDiv.querySelectorAll('.app-field-type').forEach(b => {
+              b.style.background = '#36393f'; b.style.color = '#b9bbbe'; b.classList.remove('active');
+            });
+            btn.style.background = '#5865f2'; btn.style.color = '#fff'; btn.classList.add('active');
+          };
+        });
+
+        list.appendChild(fieldDiv);
+      });
+    }
+
+  } catch (e) {
+    showToast('Ошибка загрузки: ' + e.message, 'error');
+  }
 }
 
 async function openAppRoleSelect() {
