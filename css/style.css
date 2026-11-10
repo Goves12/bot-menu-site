@@ -480,3 +480,95 @@ body::after { background: #eb459e; bottom: -100px; right: -100px; animation-dela
 .toggle-switch.active::after {
   left: 20px;
 }
+/* --- КРАСИВОЕ МЕНЮ КАНАЛОВ --- */
+.channel-selector-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 300px;
+  background: #1e222d;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  display: none;
+  flex-direction: column;
+  z-index: 1000;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  margin-top: 4px;
+}
+
+.channel-selector-menu.active {
+  display: flex;
+}
+
+.channel-search {
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.channel-search input {
+  background: transparent;
+  border: none;
+  color: #fff;
+  width: 100%;
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.channel-search input::placeholder {
+  color: #9aa0b0;
+}
+
+.channel-list {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.channel-category {
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #9aa0b0;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.channel-category svg {
+  transition: transform 0.2s;
+}
+
+.channel-category.collapsed svg {
+  transform: rotate(-90deg);
+}
+
+.channel-item {
+  padding: 8px 16px 8px 32px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.channel-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.channel-item span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.channel-item.hidden {
+  display: none;
+}

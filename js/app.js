@@ -302,7 +302,8 @@ window.addEventListener('DOMContentLoaded', () => {
           buttonText: document.getElementById('app-btn-text').value,
           buttonColor: 'Primary',
           messageText: document.getElementById('app-msg-text').value,
-          questions: questions
+          questions: questions,
+          roles: appSelectedRoles
         })
       });
 
@@ -506,43 +507,6 @@ async function loadApplicationsData() {
   document.querySelector('#applications-rows').innerHTML = 'Заявки пока не подключены к базе. (Скоро)';
 }
 
-async function openAppChannelSelect(type) {
-  const dropdownId = `app-${type}-dropdown`;
-  const dropdown = document.getElementById(dropdownId);
-  
-  document.querySelectorAll('.dropdown-content').forEach(d => { if(d !== dropdown) d.style.display = 'none'; });
-  
-  if (dropdown.style.display === 'block') { dropdown.style.display = 'none'; return; }
-  dropdown.style.display = 'block';
-
-  if (dropdown.innerHTML.includes('Загрузка')) {
-    const guildId = localStorage.getItem('currentGuildId');
-    const res = await fetch(`${API_URL}/api/guild-channels?guild_id=${guildId}`);
-    const channels = await res.json();
-
-    dropdown.innerHTML = '';
-    channels.forEach(c => {
-      const item = document.createElement('div');
-      item.className = 'dropdown-item';
-      item.innerHTML = `<input type="radio" name="app-${type}" value="${c.id}" onchange="selectAppChannel('${type}', '${c.id}', '${c.name}')"> <span># ${c.name}</span>`;
-      dropdown.appendChild(item);
-    });
-  }
-}
-
-function selectAppChannel(type, id, name) {
-  if (type === 'pub') {
-    appSelectedPub = id;
-    document.getElementById('app-selected-pub').textContent = '# ' + name;
-  } else if (type === 'log') {
-    appSelectedLog = id;
-    document.getElementById('app-selected-log').textContent = '# ' + name;
-  } else if (type === 'cat') {
-    appSelectedCategory = id;
-    document.getElementById('app-selected-category').textContent = 'Категория: ' + name;
-  }
-}
-
 async function openAppRoleSelect() {
   const dropdown = document.getElementById('app-roles-dropdown');
   document.querySelectorAll('.dropdown-content').forEach(d => { if(d !== dropdown) d.style.display = 'none'; });
@@ -577,11 +541,110 @@ function toggleAppRole(id, name, checkbox) {
   else box.textContent = appSelectedRoles.map(r => r.name).join(', ');
 }
 
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.custom-select-box') && !e.target.closest('.dropdown-content')) {
-    document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none');
+async function openAppChannelSelect(type) {
+  const dropdownId = `app-${type}-dropdown`;
+  const dropdown = document.getElementById(dropdownId);
+  
+  document.querySelectorAll('.dropdown-content').forEach(d => { if(d !== dropdown) d.style.display = 'none'; });
+  
+  if (dropdown.style.display === 'block') { dropdown.style.display = 'none'; return; }
+  dropdown.style.display = 'block';
+
+  if (dropdown.innerHTML.includes('Загрузка')) {
+    const guildId = localStorage.getItem('currentGuildId');
+    const res = await fetch(`${API_URL}/api/guild-channels?guild_id=${guildId}`);
+    const data = await res.json();
+    const { categories, channels } = data;
+
+    let html = `
+      <div class="channel-selector-menu active" style="position: static; display: flex; box-shadow: none; border: none; margin: 0;">
+        <div class="channel-search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9aa0b0" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" placeholder="Поиск каналов..." oninput="filterChannels(this)">
+        </div>
+        <div class="channel-list">
+    `;
+
+    // Без категории
+    const uncategorized = channels.filter(c => !c.parent_id);
+    if (uncategorized.length > 0) {
+      html += `
+        <div class="channel-category" onclick="toggleCategory(this)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          Без категории
+        </div>
+      `;
+      uncategorized.forEach(c => {
+        html += `
+          <div class="channel-item" onclick="selectAppChannel('${type}', '${c.id}', '${c.name}')">
+            <span style="color:#9aa0b0;">#</span> <span>${c.name}</span>
+          </div>
+        `;
+      });
+    }
+
+    // По категориям
+    categories.forEach(cat => {
+      const catChannels = channels.filter(c => c.parent_id === cat.id);
+      if (catChannels.length === 0) return;
+
+      html += `
+        <div class="channel-category" onclick="toggleCategory(this)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          ${cat.name}
+        </div>
+      `;
+      catChannels.forEach(c => {
+        html += `
+          <div class="channel-item" onclick="selectAppChannel('${type}', '${c.id}', '${c.name}')">
+            <span style="color:#9aa0b0;">#</span> <span>${c.name}</span>
+          </div>
+        `;
+      });
+    });
+
+    html += `</div></div>`;
+    dropdown.innerHTML = html;
   }
-});
+}
+
+function selectAppChannel(type, id, name) {
+  if (type === 'pub') {
+    appSelectedPub = id;
+    document.getElementById('app-selected-pub').textContent = '# ' + name;
+  } else if (type === 'log') {
+    appSelectedLog = id;
+    document.getElementById('app-selected-log').textContent = '# ' + name;
+  } else if (type === 'cat') {
+    appSelectedCategory = id;
+    document.getElementById('app-selected-category').textContent = 'Категория: ' + name;
+  }
+  document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none');
+}
+
+// Функции для поиска и сворачивания
+function filterChannels(input) {
+  const filter = input.value.toLowerCase();
+  const items = input.closest('.channel-selector-menu').querySelectorAll('.channel-item');
+  
+  items.forEach(item => {
+    const text = item.textContent.toLowerCase();
+    if (text.includes(filter)) {
+      item.classList.remove('hidden');
+    } else {
+      item.classList.add('hidden');
+    }
+  });
+}
+
+function toggleCategory(header) {
+  header.classList.toggle('collapsed');
+  let next = header.nextElementSibling;
+  while (next && next.classList.contains('channel-item')) {
+    next.style.display = header.classList.contains('collapsed') ? 'none' : 'flex';
+    next = next.nextElementSibling;
+  }
+}
 
 // --- ОСТАЛЬНЫЕ ФУНКЦИИ ---
 async function loadGuilds() {
@@ -715,22 +778,56 @@ async function openChannelSelect(type) {
   if (dropdown.innerHTML.includes('Загрузка')) {
     const guildId = localStorage.getItem('currentGuildId');
     const res = await fetch(`${API_URL}/api/guild-channels?guild_id=${guildId}`);
-    const channels = await res.json();
+    const data = await res.json();
+    const { categories, channels } = data;
 
-    dropdown.innerHTML = '';
-    channels.forEach(c => {
-      const isChecked = (type === 'pub' && selectedPubChannel === c.id) || (type === 'log' && selectedLogChannel === c.id) ? 'checked' : '';
-      const item = document.createElement('div');
-      item.className = 'dropdown-item';
-      item.innerHTML = `<input type="radio" name="${type}-channel" value="${c.id}" ${isChecked} onchange="selectChannel('${type}', '${c.id}', '${c.name}')"> <span># ${c.name}</span>`;
-      dropdown.appendChild(item);
+    let html = `
+      <div class="channel-selector-menu active" style="position: static; display: flex; box-shadow: none; border: none; margin: 0;">
+        <div class="channel-search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9aa0b0" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" placeholder="Поиск каналов..." oninput="filterChannels(this)">
+        </div>
+        <div class="channel-list">
+    `;
+
+    const uncategorized = channels.filter(c => !c.parent_id);
+    if (uncategorized.length > 0) {
+      html += `
+        <div class="channel-category" onclick="toggleCategory(this)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          Без категории
+        </div>
+      `;
+      uncategorized.forEach(c => {
+        html += `
+          <div class="channel-item" onclick="selectChannel('${type}', '${c.id}', '${c.name}')">
+            <span style="color:#9aa0b0;">#</span> <span>${c.name}</span>
+          </div>
+        `;
+      });
+    }
+
+    categories.forEach(cat => {
+      const catChannels = channels.filter(c => c.parent_id === cat.id);
+      if (catChannels.length === 0) return;
+
+      html += `
+        <div class="channel-category" onclick="toggleCategory(this)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          ${cat.name}
+        </div>
+      `;
+      catChannels.forEach(c => {
+        html += `
+          <div class="channel-item" onclick="selectChannel('${type}', '${c.id}', '${c.name}')">
+            <span style="color:#9aa0b0;">#</span> <span>${c.name}</span>
+          </div>
+        `;
+      });
     });
 
-    const submitBtn = document.createElement('button');
-    submitBtn.className = 'dropdown-submit-btn';
-    submitBtn.textContent = 'Готово';
-    submitBtn.onclick = () => { dropdown.style.display = 'none'; };
-    dropdown.appendChild(submitBtn);
+    html += `</div></div>`;
+    dropdown.innerHTML = html;
   }
 }
 
@@ -744,6 +841,7 @@ function selectChannel(type, id, name) {
     selectedLogChannelName = name;
     document.getElementById('selected-log-channel').textContent = '# ' + name;
   }
+  document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none');
 }
 
 function showToast(message, type = 'success') {
