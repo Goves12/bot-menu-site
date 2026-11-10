@@ -285,7 +285,6 @@ window.addEventListener('DOMContentLoaded', () => {
     const questions = [];
     const fieldContainers = document.querySelectorAll('#app-fields-list > div');
     fieldContainers.forEach(container => {
-      // Пропускаем заглушку, если она есть
       if (container.innerText.includes('Нет добавленных вопросов')) return;
 
       const titleInput = container.querySelector('.app-field-title');
@@ -307,6 +306,27 @@ window.addEventListener('DOMContentLoaded', () => {
     publishAppBtn.style.opacity = '0.7';
 
     try {
+      // 1. СОХРАНЯЕМ В БАЗУ
+      const saveResponse = await fetch(`${API_URL}/api/applications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          guildId: guildId,
+          name: name,
+          channelId: appSelectedPub,
+          channelLogsId: appSelectedLog,
+          categoryId: appSelectedCategory,
+          buttonText: document.getElementById('app-btn-text').value,
+          buttonColor: 'Primary',
+          messageText: document.getElementById('app-msg-text').value,
+          questions: questions,
+          roles: appSelectedRoles
+        })
+      });
+
+      if (!saveResponse.ok) throw new Error('Ошибка сохранения в БД');
+
+      // 2. ОТПРАВЛЯЕМ БОТУ
       const response = await fetch(`${API_URL}/api/send-application`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -327,11 +347,12 @@ window.addEventListener('DOMContentLoaded', () => {
       const result = await response.json();
       
       if (!result.success) {
-        throw new Error(result.error || 'Ошибка отправки');
+        throw new Error(result.error || 'Бот не отвечает');
       }
 
       showToast("Заявка успешно опубликована!", "success");
       appModal.classList.remove('active');
+      loadApplicationsData(); // Перезагружаем таблицу
       
     } catch (error) {
       showToast("Ошибка: " + error.message, "error");
@@ -521,7 +542,62 @@ document.addEventListener('click', () => {
 // --- ФУНКЦИИ ДЛЯ ЗАЯВОК ---
 
 async function loadApplicationsData() {
-  document.querySelector('#applications-rows').innerHTML = 'Заявки пока не подключены к базе. (Скоро)';
+  const guildId = localStorage.getItem('currentGuildId');
+  if (!guildId) return;
+
+  try {
+    const response = await fetch(`${API_URL}/api/applications?guild_id=${guildId}`);
+    const data = await response.json();
+    
+    const container = document.getElementById('applications-rows');
+    container.innerHTML = '';
+    
+    if (data.length === 0) {
+      container.innerHTML = 'У вас пока нет созданных заявок...';
+      container.style.padding = '40px'; container.style.textAlign = 'center';
+      document.querySelector('#apps-count').textContent = '0 созданных';
+      return;
+    }
+
+    document.querySelector('#apps-count').textContent = `${data.length} созданных`;
+    container.style.padding = '0'; container.style.textAlign = 'left'; container.style.color = 'inherit';
+
+    data.forEach(item => {
+      addApplicationRow(item.id, item.name, item.channel_id, item.created_at);
+    });
+  } catch (e) {
+    console.error('Ошибка загрузки:', e);
+  }
+}
+
+function addApplicationRow(id, name, channelId, createdAt) {
+  const container = document.getElementById('applications-rows');
+  const dateStr = new Date(createdAt).toLocaleString('ru-RU');
+  
+  const row = document.createElement('div');
+  row.className = 'table-row';
+  row.style.gridTemplateColumns = '2fr 1fr 1fr 50px';
+  row.innerHTML = `
+    <div class="table-cell-main">
+      <div class="accounting-name">${name}</div>
+    </div>
+    <div class="table-cell-status">
+      <span style="color:#9aa0b0;">Канал: ${channelId}</span>
+    </div>
+    <div class="table-cell-time">
+      ${dateStr}
+    </div>
+    <div class="table-cell-actions">
+      <button class="btn-icon delete-btn" style="color:#ed4245;">✕</button>
+    </div>
+  `;
+
+  row.querySelector('.delete-btn').onclick = () => {
+    row.remove();
+    // TODO: Удаление из базы
+  };
+
+  container.appendChild(row);
 }
 
 async function openAppRoleSelect() {
