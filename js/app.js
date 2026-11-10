@@ -567,3 +567,86 @@ function showToast(message, type = 'success') {
     setTimeout(() => toast.remove(), 300);
   }, 3000);
 }
+// ==========================================
+// ЛОГИКА ДЛЯ ЗАЯВОК (НОВЫЙ МОДУЛЬ)
+// ==========================================
+
+// Открытие экрана заявок
+document.querySelectorAll('.module-card').forEach(card => {
+  const title = card.querySelector('h3').textContent;
+  if (title === 'Заявки') {
+    card.querySelector('button').onclick = () => {
+      showScreen('screen-applications');
+      loadApplicationsData(); // Загружаем данные из базы
+    };
+  }
+});
+
+// Кнопка "Назад" с экрана заявок
+document.getElementById('back-to-settings-apps')?.addEventListener('click', () => {
+  showScreen('screen-settings');
+});
+
+// Открытие модального окна
+document.getElementById('open-application-modal')?.addEventListener('click', () => {
+  document.getElementById('modal-application').classList.add('active');
+  document.getElementById('app-modal-title').textContent = 'Новая заявка';
+  document.getElementById('app-fields-list').innerHTML = ''; // Очищаем вопросы
+  // Сбрасываем поля (можно добавить больше сбросов)
+});
+
+// Закрытие модального окна
+document.getElementById('close-application-modal')?.addEventListener('click', () => {
+  document.getElementById('modal-application').classList.remove('active');
+});
+
+document.getElementById('cancel-app-btn')?.addEventListener('click', () => {
+  document.getElementById('modal-application').classList.remove('active');
+});
+
+// Добавление нового вопроса
+document.getElementById('add-app-field')?.addEventListener('click', () => {
+  const list = document.getElementById('app-fields-list');
+  if (list.innerText.includes('Нет добавленных вопросов')) list.innerHTML = '';
+
+  const fieldDiv = document.createElement('div');
+  fieldDiv.style.cssText = 'background: #1e222d; border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 15px; position: relative;';
+  
+  fieldDiv.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+      <input type="text" class="form-input app-field-title" placeholder="Вопрос (например: Ваш ник в игре)" style="border: none; background: transparent; font-weight: 600; width: 80%; padding: 0;">
+      <button class="btn-icon delete-app-field" style="color: #ed4245; background: rgba(237, 66, 69, 0.1); border-radius: 6px; padding: 4px 8px;">✕</button>
+    </div>
+    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+      <button class="btn-tab active app-field-type" data-type="short" style="background: #5865f2; color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 12px;">Короткая</button>
+      <button class="btn-tab app-field-type" data-type="long" style="background: #36393f; color: #b9bbbe; padding: 4px 12px; border-radius: 20px; font-size: 12px;">Большая</button>
+    </div>
+    <input type="text" class="form-input app-field-hint" placeholder="Подсказка (необязательно)" style="background: #0f1117;">
+  `;
+
+  // Логика удаления вопроса
+  fieldDiv.querySelector('.delete-app-field').onclick = () => {
+    fieldDiv.remove();
+    if (list.children.length === 0) {
+      list.innerHTML = '<div style="text-align: center; padding: 20px; color: #9aa0b0; border: 1px dashed rgba(255,255,255,0.1); border-radius: 8px;">Нет добавленных вопросов. Нажмите «Добавить вопрос».</div>';
+    }
+  };
+
+  // Логика переключения типа (Короткая/Большая)
+  fieldDiv.querySelectorAll('.app-field-type').forEach(btn => {
+    btn.onclick = () => {
+      fieldDiv.querySelectorAll('.app-field-type').forEach(b => {
+        b.style.background = '#36393f'; b.style.color = '#b9bbbe'; b.classList.remove('active');
+      });
+      btn.style.background = '#5865f2'; btn.style.color = '#fff'; btn.classList.add('active');
+    };
+  });
+
+  list.appendChild(fieldDiv);
+});
+
+// Заглушка для загрузки заявок (чтобы не было ошибки)
+async function loadApplicationsData() {
+  // В будущем здесь будет запрос к базе
+  document.querySelector('#applications-rows').innerHTML = 'Заявки пока не подключены к базе. (Скоро)';
+}

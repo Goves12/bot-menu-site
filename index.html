@@ -91,7 +91,6 @@
     </div>
     <p class="subtitle">Управляйте предметами, автомобилями или другими ресурсами сервера.</p>
     <div class="accounting-action-bar">
-      <!-- ВОТ ОНА, КНОПКА С ID -->
       <button id="open-create-modal" class="btn-create">
         <span>Создать новый учёт</span>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -108,6 +107,36 @@
         </div>
         <div id="accounting-rows" style="text-align:center; padding: 40px; color: #9aa0b0;">
            У вас пока нет созданных учётов. Нажмите «Создать новый учёт», чтобы начать.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ЭКРАН 5: УПРАВЛЕНИЕ ЗАЯВКАМИ ================= -->
+<section id="screen-applications" class="screen">
+  <div class="servers-wrap">
+    <div class="settings-header">
+      <button id="back-to-settings-apps" class="btn-back">← Назад</button>
+      <h2 class="settings-title">Заявки</h2>
+    </div>
+    <p class="subtitle">Управляйте заявками для вашего сервера.</p>
+    <div class="accounting-action-bar">
+      <button id="open-application-modal" class="btn-create">
+        <span>Создать новую заявку</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      </button>
+    </div>
+    <div class="accounting-list-wrap">
+      <div class="accounting-list-header">
+        <h3>Ваши Заявки <span class="badge" id="apps-count">0 созданных</span></h3>
+      </div>
+      <div class="accounting-table">
+        <div class="table-header" style="grid-template-columns: 2fr 1fr 1fr 50px;">
+          <span>Название</span><span>Канал</span><span>Время</span><span></span>
+        </div>
+        <div id="applications-rows" style="text-align:center; padding: 40px; color: #9aa0b0;">
+           У вас пока нет созданных заявок. Нажмите «Создать новую заявку», чтобы начать.
         </div>
       </div>
     </div>
@@ -136,7 +165,6 @@
         <input type="text" id="acc-name" class="form-input" placeholder="Новый учёт" value="Новый учёт">
       </div>
       
-      <!-- НОВЫЙ БЛОК РОЛЕЙ -->
       <div class="form-group">
         <label>Настройка ролей для модерации учёта *</label>
         <div class="custom-select-box" id="roles-box">
@@ -148,7 +176,6 @@
         </div>
       </div>
 
-      <!-- НОВЫЙ БЛОК КАНАЛА ПУБЛИКАЦИИ -->
       <div class="form-group">
         <label>Канал публикации *</label>
         <div class="custom-select-box" id="pub-channel-box">
@@ -160,7 +187,6 @@
         </div>
       </div>
 
-      <!-- НОВЫЙ БЛОК КАНАЛА ЛОГОВ -->
       <div class="form-group">
         <label>Канал логов *</label>
         <div class="custom-select-box" id="log-channel-box">
@@ -187,6 +213,161 @@
         <label>Лимиты</label>
         <p class="text-muted" style="font-size:12px; margin-bottom:8px;">Максимальное количество объектов на одного пользователя</p>
         <input type="number" id="acc-limit" class="form-input" value="1" style="width:100px; float:right;">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= МОДАЛЬНОЕ ОКНО ЗАЯВКИ ================= -->
+<div id="modal-application" class="modal-overlay">
+  <div class="modal-content" style="max-width: 900px;">
+    
+    <!-- Шапка окна -->
+    <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding: 15px 24px;">
+      <div style="display:flex; align-items:center; gap:15px;">
+        <button id="close-application-modal" class="btn-icon" type="button" style="background: rgba(255,255,255,0.05); border-radius: 8px; width:36px; height:36px; display:flex; align-items:center; justify-content:center;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        </button>
+        <h3 id="app-modal-title" style="font-size: 20px; margin:0;">Новая заявка</h3>
+        <button class="btn-icon" style="background: rgba(88, 101, 242, 0.1); color: #5865f2; border-radius: 6px; padding: 4px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        </button>
+        <label style="display:flex; align-items:center; cursor:pointer;">
+          <input type="checkbox" checked style="display:none;">
+          <div style="width: 40px; height: 22px; background: #5865f2; border-radius: 20px; position: relative; transition: 0.2s;">
+            <div style="width: 18px; height: 18px; background: white; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
+          </div>
+        </label>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-outline" style="border: 1px solid #5865f2; color: #5865f2;">Статистика</button>
+        <button class="btn-save" id="cancel-app-btn">Отмена</button>
+        <button class="btn-save" style="opacity: 0.5;">Сохранить</button>
+        <button class="btn-publish" id="publish-app-btn">Опубликовать</button>
+      </div>
+    </div>
+
+    <!-- Тело окна (с вкладками) -->
+    <div class="modal-body" style="padding: 0; gap: 0;">
+      
+      <!-- Вкладки (пока просто визуально, без логики переключения для простоты) -->
+      <div style="display: flex; gap: 20px; padding: 20px 24px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+         <div style="padding-bottom: 10px; border-bottom: 2px solid #5865f2; color: #fff; font-weight: 600; cursor: pointer;">Основное</div>
+         <div style="padding-bottom: 10px; color: #9aa0b0; font-weight: 600; cursor: pointer;">Сообщение</div>
+         <div style="padding-bottom: 10px; color: #9aa0b0; font-weight: 600; cursor: pointer;">Модальное окно</div>
+         <div style="padding-bottom: 10px; color: #9aa0b0; font-weight: 600; cursor: pointer;">Дополнительно</div>
+      </div>
+
+      <div style="padding: 24px; display: flex; flex-direction: column; gap: 24px; overflow-y: auto; max-height: 70vh;">
+        
+        <!-- Блок: Настройка заявки -->
+        <div style="background: #0f1117; border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 20px;">
+          <h4 style="margin-bottom: 20px; font-size: 18px;">Настройка заявки</h4>
+          
+          <div class="form-group">
+            <label>Название заявок на сайте *</label>
+            <input type="text" id="app-name" class="form-input" value="Новые заявки">
+          </div>
+
+          <div class="form-group" style="margin-top: 20px;">
+            <label>Тип заявок *</label>
+            <div class="btn-group">
+              <button class="btn-tab active" style="background: #5865f2; color: #fff; border-color: #5865f2;">Расширенные</button>
+              <button class="btn-tab" style="background: #36393f; color: #b9bbbe;">Простые</button>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 20px;">
+            <label>Настройка ролей для рассмотрения заявок *</label>
+            <div class="custom-select-box" id="app-roles-box">
+              <div class="selected-items" id="app-selected-roles">Выберите роли...</div>
+              <button type="button" class="btn-plus" onclick="openRoleSelect('app')">+</button>
+            </div>
+            <div id="app-roles-dropdown" class="dropdown-content" style="display: none;">
+               <p style="padding: 10px; color: #9aa0b0; font-size: 12px;">Загрузка ролей...</p>
+            </div>
+            <span style="color: #ed4245; font-size: 12px; margin-top: 4px;">Выберите хотя бы одну роль для рассмотрения</span>
+          </div>
+        </div>
+
+        <!-- Блок: Настройка каналов -->
+        <div style="background: #0f1117; border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 20px;">
+          <h4 style="margin-bottom: 20px; font-size: 18px;">Настройка каналов</h4>
+          
+          <div class="form-group">
+            <label>Канал публикации *</label>
+            <div class="custom-select-box" id="app-pub-box">
+              <div class="selected-items" id="app-selected-pub">Выберите канал...</div>
+              <button type="button" class="btn-plus" onclick="openChannelSelect('app-pub')">+</button>
+            </div>
+            <div id="app-pub-dropdown" class="dropdown-content" style="display: none;">
+               <p style="padding: 10px; color: #9aa0b0; font-size: 12px;">Загрузка каналов...</p>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 20px;">
+            <label>Канал логов *</label>
+            <div class="custom-select-box" id="app-log-box">
+              <div class="selected-items" id="app-selected-log">Выберите канал...</div>
+              <button type="button" class="btn-plus" onclick="openChannelSelect('app-log')">+</button>
+            </div>
+            <div id="app-log-dropdown" class="dropdown-content" style="display: none;">
+               <p style="padding: 10px; color: #9aa0b0; font-size: 12px;">Загрузка каналов...</p>
+            </div>
+          </div>
+          
+          <div class="form-group" style="margin-top: 20px;">
+            <label>Категория заявок *</label>
+            <div class="custom-select-box" id="app-category-box">
+              <div class="selected-items" id="app-selected-category">Выберите категорию...</div>
+              <button type="button" class="btn-plus" onclick="openChannelSelect('app-cat')">+</button>
+            </div>
+            <div id="app-cat-dropdown" class="dropdown-content" style="display: none;">
+               <p style="padding: 10px; color: #9aa0b0; font-size: 12px;">Загрузка категорий...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Блок: Динамические вопросы -->
+        <div style="background: #0f1117; border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 20px;">
+          <div class="flex-between" style="margin-bottom: 20px;">
+            <h4 style="font-size: 18px;">Настройка модального окна</h4>
+            <button id="add-app-field" class="btn-small" type="button">+ Добавить вопрос</button>
+          </div>
+          
+          <div id="app-fields-list" style="display: flex; flex-direction: column; gap: 15px;">
+             <!-- Сюда JS будет добавлять вопросы -->
+             <div style="text-align: center; padding: 20px; color: #9aa0b0; border: 1px dashed rgba(255,255,255,0.1); border-radius: 8px;">
+                Нет добавленных вопросов. Нажмите «Добавить вопрос».
+             </div>
+          </div>
+        </div>
+
+        <!-- Блок: Настройка сообщения -->
+        <div style="background: #0f1117; border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 20px;">
+          <h4 style="margin-bottom: 20px; font-size: 18px;">Настройка сообщения</h4>
+          
+          <div class="form-group">
+            <label>Текст сообщения (необязательно)</label>
+            <textarea class="form-input" id="app-msg-text" rows="3" placeholder="Напишите сообщение которое будет в канале публикации"></textarea>
+          </div>
+
+          <div class="form-group" style="margin-top: 20px;">
+            <label>Текст кнопки *</label>
+            <input type="text" id="app-btn-text" class="form-input" value="Подать заявку">
+          </div>
+
+          <div class="form-group" style="margin-top: 20px;">
+            <label>Цвет кнопки</label>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn-tab active" style="background: #5865f2; color: #fff; border-color: #5865f2; border-radius: 20px; padding: 4px 12px; font-size: 12px;">✓ Синий</button>
+              <button class="btn-tab" style="background: #36393f; color: #b9bbbe; border-radius: 20px; padding: 4px 12px; font-size: 12px;">Серый</button>
+              <button class="btn-tab" style="background: #2d7d46; color: #fff; border-radius: 20px; padding: 4px 12px; font-size: 12px;">Зеленый</button>
+              <button class="btn-tab" style="background: #da373c; color: #fff; border-radius: 20px; padding: 4px 12px; font-size: 12px;">Красный</button>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
