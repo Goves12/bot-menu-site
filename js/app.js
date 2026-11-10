@@ -259,13 +259,26 @@ window.addEventListener('DOMContentLoaded', () => {
     list.appendChild(fieldDiv);
   });
 
-  // ОТПРАВКА ЗАЯВКИ
+  // ОТПРАВКА ЗАЯВКИ (С ПРОВЕРКАМИ)
   publishAppBtn?.addEventListener('click', async () => {
     const name = document.getElementById('app-name').value;
     const guildId = localStorage.getItem('currentGuildId');
     
-    if (!name || !appSelectedPub) {
-      showToast("Пожалуйста, заполните название и выберите канал публикации!", "error");
+    // 👇 ПРОВЕРКИ НА ОБЯЗАТЕЛЬНЫЕ ПОЛЯ
+    if (!name) {
+      showToast("Пожалуйста, введите название заявки!", "error");
+      return;
+    }
+    if (!appSelectedPub) {
+      showToast("Пожалуйста, выберите канал публикации!", "error");
+      return;
+    }
+    if (!appSelectedCategory) {
+      showToast("Пожалуйста, выберите категорию для заявок!", "error");
+      return;
+    }
+    if (appSelectedRoles.length === 0) {
+      showToast("Пожалуйста, выберите хотя бы одну роль для модерации!", "error");
       return;
     }
 
