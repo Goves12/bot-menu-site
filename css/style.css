@@ -137,7 +137,7 @@ body::after { background: #eb459e; bottom: -100px; right: -100px; animation-dela
 }
 .btn-create:hover { background: #262b38; }
 
-/* 🔥 ИСПРАВЛЕНО: overflow visible, чтобы меню не обрезалось */
+/* Обертка таблицы */
 .accounting-list-wrap { 
   background: #1e222d; 
   border: 1px solid rgba(255, 255, 255, 0.05); 
@@ -149,7 +149,6 @@ body::after { background: #eb459e; bottom: -100px; right: -100px; animation-dela
 .badge { background: rgba(87, 242, 135, 0.1); color: #57f287; font-size: 12px; padding: 4px 8px; border-radius: 6px; font-weight: 600; }
 .limit-text { color: #9aa0b0; font-size: 13px; }
 
-/* 🔥 ИСПРАВЛЕНО: overflow visible для таблицы */
 .accounting-table { 
   display: flex; 
   flex-direction: column; 
@@ -237,9 +236,9 @@ body::after { background: #eb459e; bottom: -100px; right: -100px; animation-dela
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 8px;
   width: 100%;
-  max-height: 200px;
+  max-height: 250px; /* Чуть больше, чтобы влезло меню каналов */
   overflow-y: auto;
-  z-index: 100;
+  z-index: 1000;
   margin-top: 4px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
   padding-bottom: 10px;
@@ -278,7 +277,7 @@ body::after { background: #eb459e; bottom: -100px; right: -100px; animation-dela
 }
 
 /* =========================================
-   МЕНЮ 3 ТОЧКИ (исправлено)
+   МЕНЮ 3 ТОЧКИ
    ========================================= */
 .table-cell-actions {
   position: relative;
@@ -315,7 +314,7 @@ body::after { background: #eb459e; bottom: -100px; right: -100px; animation-dela
   flex-direction: column;
   min-width: 160px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  z-index: 9999; /* 🔥 ВЫСОКИЙ Z-INDEX, чтобы быть поверх всего */
+  z-index: 9999;
   overflow: hidden;
   animation: menuFadeIn 0.2s ease;
 }
@@ -375,6 +374,7 @@ body::after { background: #eb459e; bottom: -100px; right: -100px; animation-dela
 .action-menu button.delete-btn::before {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ed4245' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3 6 5 6 21 6'%3E%3C/polyline%3E%3Cpath d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'%3E%3C/path%3E%3Cline x1='10' y1='11' x2='10' y2='17'%3E%3C/line%3E%3Cline x1='14' y1='11' x2='14' y2='17'%3E%3C/line%3E%3C/svg%3E");
 }
+
 /* =========================================
    КРАСИВОЕ УВЕДОМЛЕНИЕ (ТОСТ)
    ========================================= */
@@ -398,108 +398,23 @@ body::after { background: #eb459e; bottom: -100px; right: -100px; animation-dela
   align-items: center;
   gap: 12px;
 }
+.toast-notification.error { border-left-color: #ed4245; }
+.toast-notification.show { transform: translateY(0); opacity: 1; }
 
-.toast-notification.error {
-  border-left-color: #ed4245;
-}
-
-.toast-notification.show {
-  transform: translateY(0);
-  opacity: 1;
-}
-/* Красивые кнопки для вкладок и заголовков */
-.modal-header h3 {
-  font-size: 20px;
-  font-weight: 700;
-  color: #fff;
-}
-
-/* Кнопка статистики */
-.btn-stat {
-  background: transparent;
-  border: 1px solid #5865f2;
-  color: #5865f2;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.btn-stat:hover {
-  background: rgba(88, 101, 242, 0.1);
-}
-
-/* Вкладки */
-.modal-tabs {
-  display: flex;
-  gap: 20px;
-  padding: 20px 24px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-.modal-tab {
-  padding-bottom: 10px;
-  font-weight: 600;
-  color: #9aa0b0;
-  cursor: pointer;
-  transition: color 0.2s;
-  border-bottom: 2px solid transparent;
-}
-.modal-tab:hover {
-  color: #fff;
-}
-.modal-tab.active {
-  color: #fff;
-  border-bottom-color: #5865f2;
-}
-
-/* Переключатель (Toggle) */
-.toggle-switch {
-  width: 40px;
-  height: 22px;
-  background: #36393f;
-  border-radius: 20px;
-  position: relative;
-  cursor: pointer;
-  transition: 0.2s;
-  border: none;
-}
-.toggle-switch.active {
-  background: #5865f2;
-}
-.toggle-switch::after {
-  content: '';
-  width: 18px;
-  height: 18px;
-  background: white;
-  border-radius: 50%;
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  transition: 0.2s;
-}
-.toggle-switch.active::after {
-  left: 20px;
-}
-/* --- КРАСИВОЕ МЕНЮ КАНАЛОВ --- */
+/* =========================================
+   КРАСИВОЕ МЕНЮ КАНАЛОВ (ВНУТРИ ДРОПДАУНА)
+   ========================================= */
 .channel-selector-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
+  position: static; /* 🔥 Убираем absolute, чтобы меню было внутри */
   width: 100%;
-  max-height: 300px;
-  background: #1e222d;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  display: none;
-  flex-direction: column;
-  z-index: 1000;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  margin-top: 4px;
-}
-
-.channel-selector-menu.active {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  margin: 0;
   display: flex;
+  flex-direction: column;
 }
+.channel-selector-menu.active { display: flex; }
 
 .channel-search {
   padding: 10px 16px;
@@ -508,7 +423,6 @@ body::after { background: #eb459e; bottom: -100px; right: -100px; animation-dela
   align-items: center;
   gap: 8px;
 }
-
 .channel-search input {
   background: transparent;
   border: none;
@@ -518,15 +432,9 @@ body::after { background: #eb459e; bottom: -100px; right: -100px; animation-dela
   font-family: inherit;
   font-size: 14px;
 }
+.channel-search input::placeholder { color: #9aa0b0; }
 
-.channel-search input::placeholder {
-  color: #9aa0b0;
-}
-
-.channel-list {
-  overflow-y: auto;
-  flex: 1;
-}
+.channel-list { overflow-y: auto; flex: 1; }
 
 .channel-category {
   padding: 8px 16px;
@@ -539,14 +447,8 @@ body::after { background: #eb459e; bottom: -100px; right: -100px; animation-dela
   gap: 8px;
   cursor: pointer;
 }
-
-.channel-category svg {
-  transition: transform 0.2s;
-}
-
-.channel-category.collapsed svg {
-  transform: rotate(-90deg);
-}
+.channel-category svg { transition: transform 0.2s; }
+.channel-category.collapsed svg { transform: rotate(-90deg); }
 
 .channel-item {
   padding: 8px 16px 8px 32px;
@@ -558,17 +460,6 @@ body::after { background: #eb459e; bottom: -100px; right: -100px; animation-dela
   cursor: pointer;
   transition: background 0.2s;
 }
-
-.channel-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.channel-item span {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.channel-item.hidden {
-  display: none;
-}
+.channel-item:hover { background: rgba(255, 255, 255, 0.05); }
+.channel-item span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.channel-item.hidden { display: none; }
