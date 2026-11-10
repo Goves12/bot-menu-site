@@ -570,13 +570,14 @@ async function loadApplicationsData() {
   }
 }
 
+// 👇 ОБНОВЛЕННАЯ ФУНКЦИЯ (кнопка изменить + удаление без confirm)
 function addApplicationRow(id, name, channelId, createdAt) {
   const container = document.getElementById('applications-rows');
   const dateStr = new Date(createdAt).toLocaleString('ru-RU');
   
   const row = document.createElement('div');
   row.className = 'table-row';
-  row.style.gridTemplateColumns = '2fr 1fr 1fr 50px';
+  row.style.gridTemplateColumns = '2fr 1fr 1fr 100px'; // Шире для двух кнопок
   row.innerHTML = `
     <div class="table-cell-main">
       <div class="accounting-name">${name}</div>
@@ -587,14 +588,39 @@ function addApplicationRow(id, name, channelId, createdAt) {
     <div class="table-cell-time">
       ${dateStr}
     </div>
-    <div class="table-cell-actions">
-      <button class="btn-icon delete-btn" style="color:#ed4245;">✕</button>
+    <div class="table-cell-actions" style="display: flex; gap: 5px;">
+      <button class="btn-icon edit-btn" style="color:#5865f2; background: rgba(88, 101, 242, 0.1); border-radius: 6px; padding: 4px 8px;">✎</button>
+      <button class="btn-icon delete-btn" style="color:#ed4245; background: rgba(237, 66, 69, 0.1); border-radius: 6px; padding: 4px 8px;">✕</button>
     </div>
   `;
 
-  row.querySelector('.delete-btn').onclick = () => {
-    row.remove();
-    // TODO: Удаление из базы
+  // УДАЛЕНИЕ (без confirm)
+  row.querySelector('.delete-btn').onclick = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/applications/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) throw new Error('Ошибка удаления');
+
+      row.remove();
+      showToast("Заявка успешно удалена!", "success");
+
+      // Обновляем счетчик
+      const count = container.children.length;
+      document.querySelector('#apps-count').textContent = `${count} созданных`;
+      if (count === 0) {
+        container.innerHTML = 'У вас пока нет созданных заявок...';
+        container.style.padding = '40px'; container.style.textAlign = 'center';
+      }
+    } catch (e) {
+      showToast('Не удалось удалить: ' + e.message, 'error');
+    }
+  };
+
+  // ИЗМЕНЕНИЕ (пока заглушка)
+  row.querySelector('.edit-btn').onclick = () => {
+    showToast("Редактирование заявок пока в разработке", "error");
   };
 
   container.appendChild(row);
